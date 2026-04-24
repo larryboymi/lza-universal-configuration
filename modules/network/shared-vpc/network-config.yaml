@@ -994,6 +994,20 @@ vpcs:
     instanceTenancy: default
     routeTables:
       ## Add route tables for subnets shared with accounts
+      ### Example Route Table
+      # - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-shared-prod-example-ai-a"
+      #   routes:
+      #     - name: TgwRoute
+      #       destination: "{{ GlobalCidr }}"
+      #       type: transitGateway
+      #       target: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw"
+      #     - name: S3Gateway
+      #       type: gatewayEndpoint
+      #       target: s3
+      #     - name: DynamoDBGateway
+      #       type: gatewayEndpoint
+      #       target: dynamodb
+
       ## DO NOT MODIFY ROUTE TABLES FROM THIS POINT ON
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-shared-prod-rt-tgw-a"
         routes: []
@@ -1001,6 +1015,17 @@ vpcs:
         routes: []
     subnets:
       ## Add subnets to be shared with accounts
+      ### Example Subnet
+      # - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-shared-prod-example-ai-a"
+      #   availabilityZone: a
+      #   routeTable: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-shared-prod-example-ai-a"
+      #   ipamAllocation:
+      #     ipamPoolName: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-ipam-workloads-prod-pool"
+      #     netmaskLength: 26
+      #   shareTargets:
+      #     accounts:
+      #       - MyExampleAiProdAccount
+      
       ## DO NOT MODIFY SUBNETS FROM THIS POINT ON
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-shared-prod-tgw-a"
         availabilityZone: a
