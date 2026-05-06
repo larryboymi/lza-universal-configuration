@@ -303,9 +303,11 @@ By implementing this policy at the OU level, the LZA Universal Config ensures th
 
 The S3 Tag Policy addresses the unique continuous backup capabilities of Amazon S3. Organizations without this specialized policy often struggle with inconsistent approaches to S3 data protection and inability to leverage S3-specific backup features.
 
-This policy enforces that S3 buckets tagged with `BackupPlan` must use one of the approved values: `Continuous`, `Hourly`, `Daily`, `Weekly`, or `Monthly`. The inclusion of the `Continuous` value enables point-in-time recovery for S3 data, a capability not available for most other resource types.
+This policy enforces that S3 buckets tagged with `S3BackupPlan` must use one of the approved values: `Continuous`, `Hourly`, `Daily`, `Weekly`, or `Monthly`. The inclusion of the `Continuous` value enables point-in-time recovery for S3 data, a capability not available for most other resource types.
 
 This specialized policy complements the Organization Tag Policy, ensuring that S3 buckets across both Infrastructure and Workloads OUs follow the same standardized approach while accommodating S3-specific capabilities.
+
+Review Amazon S3 backup [documentation](https://docs.aws.amazon.com/aws-backup/latest/devguide/s3-backups.html) for bucket prerequisites (e.g. Versioning enabled).
 
 === Effective Tagging Strategy
 

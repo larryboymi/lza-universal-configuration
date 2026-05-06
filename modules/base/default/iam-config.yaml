@@ -41,6 +41,8 @@ roleSets:
           awsManaged:
             - service-role/AWSBackupServiceRolePolicyForBackup
             - service-role/AWSBackupServiceRolePolicyForRestores
+            - AWSBackupServiceRolePolicyForS3Backup
+            - AWSBackupServiceRolePolicyForS3Restore
       - name: EC2-Default-SSM-Role
         instanceProfile: true
         assumedBy:
