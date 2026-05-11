@@ -1,6 +1,6 @@
 {
   "tags": {
-    "BackupPlan": {
+    "S3BackupPlan": {
       "tag_key": {
         "@@assign": "S3BackupPlan"
       },
