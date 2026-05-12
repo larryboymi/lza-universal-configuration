@@ -136,6 +136,7 @@ release:
     - npm install
     - node index.js ../modules/temp/
     - node shared-vpc-testing.js ../modules/temp/
+    - node shared-vpc-multi-region.js ../modules/temp/
     - node validate-network-config.js ../modules/temp/
     - cd ../modules/temp
     - zip -r ../../aws-accelerator-config.zip . &>/dev/null
