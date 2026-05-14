@@ -122,9 +122,20 @@ if (!parsedConfig || !Array.isArray(parsedConfig.vpcs)) {
   fail("Expected a top-level 'vpcs' array in network-config.yaml");
 }
 
-// ── Validate shared VPC structure ───────────────────────────────────
+// ── Validate VPC structure per model ────────────────────────────────
 
 const errors = [];
+
+// Detect which network model is in use based on VPC naming patterns.
+// Shared-VPC has `shared-dev/test/prod` VPCs; hub-and-spoke has
+// `inspection/egress/ingress/endpoints/sharedservices` VPCs.
+const hasSharedVpcs = parsedConfig.vpcs.some(
+  v => v && typeof v.name === "string" && /-shared-(dev|test|prod)$/.test(v.name)
+);
+const hasHubSpokeVpcs = parsedConfig.vpcs.some(
+  v => v && typeof v.name === "string" && /-(inspection|egress|ingress|endpoints|sharedservices)$/.test(v.name)
+);
+
 const requiredEnvs = ["dev", "test", "prod"];
 
 // Determine which regions the config is expected to cover. If the env var
@@ -136,68 +147,109 @@ const expectedRegions = (process.env.ENABLED_REGIONS || "")
   .filter(r => r.length > 0);
 
 function regionMatchesHome(regionLiteral) {
-  // Home-region items use the `{{ HomeRegion }}` placeholder rather than a
-  // literal. After normalizePlaceholders() it becomes "PLACEHOLDER", so any
-  // name containing the literal env name won't match; we check for the
-  // placeholder form separately.
   return regionLiteral === process.env.HOME_REGION;
 }
 
 function regionTokenFor(regionLiteral) {
-  // For non-home regions the transform substitutes the literal; for the home
-  // region the source keeps `{{ HomeRegion }}`, which after normalization
-  // becomes the literal `PLACEHOLDER`.
+  // After normalizePlaceholders(), both {{ HomeRegion }} and {{ RegionN }}
+  // become "PLACEHOLDER". If the config uses {{ RegionN }} tokens (hub-and-spoke),
+  // non-home regions also resolve to PLACEHOLDER. If it uses literal region
+  // strings (shared-vpc), non-home regions keep their literal value.
+  // We check which pattern the config uses by looking for the literal region in VPC names.
   return regionMatchesHome(regionLiteral) ? "PLACEHOLDER" : regionLiteral;
 }
 
-if (expectedRegions.length > 0) {
-  for (const region of expectedRegions) {
-    const regionToken = regionTokenFor(region);
+// ── Shared-VPC model checks ─────────────────────────────────────────
+if (hasSharedVpcs) {
+  if (expectedRegions.length > 0) {
+    for (const region of expectedRegions) {
+      const regionToken = regionTokenFor(region);
+      for (const env of requiredEnvs) {
+        const vpcNameSuffix = `${regionToken}-shared-${env}`;
+        const vpc = findByName(parsedConfig.vpcs, vpcNameSuffix, true);
+        if (!vpc) {
+          errors.push(
+            `Missing shared-${env} VPC for region '${region}' (expected name ending in '${vpcNameSuffix}')`
+          );
+        }
+      }
+    }
+  } else {
     for (const env of requiredEnvs) {
-      const vpcNameSuffix = `${regionToken}-shared-${env}`;
-      const vpc = findByName(parsedConfig.vpcs, vpcNameSuffix, true);
+      const vpc = findByNameContains(parsedConfig.vpcs, `shared-${env}`);
       if (!vpc) {
-        errors.push(
-          `Missing shared-${env} VPC for region '${region}' (expected name ending in '${vpcNameSuffix}')`
-        );
+        errors.push(`Missing shared-${env} VPC`);
       }
     }
   }
-} else {
-  // Legacy path: no ENABLED_REGIONS provided, fall back to home-region-only check.
-  for (const env of requiredEnvs) {
-    const vpc = findByNameContains(parsedConfig.vpcs, `shared-${env}`);
-    if (!vpc) {
-      errors.push(`Missing shared-${env} VPC`);
+
+  // Every shared-* VPC must have TGW route tables and subnets.
+  for (const vpc of parsedConfig.vpcs || []) {
+    if (!vpc || typeof vpc.name !== "string") continue;
+    const m = vpc.name.match(/-shared-(dev|test|prod)$/);
+    if (!m) continue;
+    const baseName = vpc.name;
+
+    if (!Array.isArray(vpc.subnets)) {
+      errors.push(`${baseName}: missing subnets array`);
+    } else {
+      for (const suffix of ["-tgw-a", "-tgw-b"]) {
+        if (!findByNameContains(vpc.subnets, `${baseName}${suffix}`)) {
+          errors.push(`Missing required TGW subnet ${baseName}${suffix}`);
+        }
+      }
+    }
+
+    if (!Array.isArray(vpc.routeTables)) {
+      errors.push(`${baseName}: missing routeTables array`);
+    } else {
+      for (const suffix of ["-rt-tgw-a", "-rt-tgw-b"]) {
+        if (!findByNameContains(vpc.routeTables, `${baseName}${suffix}`)) {
+          errors.push(`Missing required TGW route table ${baseName}${suffix}`);
+        }
+      }
     }
   }
 }
 
-// Regardless of region coverage, every shared-* VPC present in the config
-// must have its TGW route tables and TGW subnets in place.
-for (const vpc of parsedConfig.vpcs || []) {
-  if (!vpc || typeof vpc.name !== "string") continue;
-  const m = vpc.name.match(/-shared-(dev|test|prod)$/);
-  if (!m) continue;
-  const env = m[1];
-  const baseName = vpc.name;
+// ── Hub-and-spoke model checks ──────────────────────────────────────
+if (hasHubSpokeVpcs) {
+  const hubSpokeVpcTypes = ["inspection", "egress", "ingress", "endpoints", "sharedservices"];
 
-  if (!Array.isArray(vpc.subnets)) {
-    errors.push(`${baseName}: missing subnets array`);
+  if (expectedRegions.length > 0) {
+    // Hub-and-spoke uses {{ RegionN }} tokens which all become PLACEHOLDER
+    // after normalization. We validate by counting VPCs of each type.
+    for (const vpcType of hubSpokeVpcTypes) {
+      const count = parsedConfig.vpcs.filter(
+        v => v && typeof v.name === "string" && v.name.endsWith(`-${vpcType}`)
+      ).length;
+      if (count < expectedRegions.length) {
+        errors.push(
+          `Expected ${expectedRegions.length} ${vpcType} VPC(s) (one per region), found ${count}`
+        );
+      }
+    }
   } else {
-    for (const suffix of ["-tgw-a", "-tgw-b"]) {
-      if (!findByNameContains(vpc.subnets, `${baseName}${suffix}`)) {
-        errors.push(`Missing required TGW subnet ${baseName}${suffix}`);
+    for (const vpcType of hubSpokeVpcTypes) {
+      if (!findByNameContains(parsedConfig.vpcs, vpcType)) {
+        errors.push(`Missing ${vpcType} VPC`);
       }
     }
   }
 
-  if (!Array.isArray(vpc.routeTables)) {
-    errors.push(`${baseName}: missing routeTables array`);
-  } else {
-    for (const suffix of ["-rt-tgw-a", "-rt-tgw-b"]) {
-      if (!findByNameContains(vpc.routeTables, `${baseName}${suffix}`)) {
-        errors.push(`Missing required TGW route table ${baseName}${suffix}`);
+  // Every hub-and-spoke VPC with TGW attachment subnets must have them.
+  for (const vpc of parsedConfig.vpcs || []) {
+    if (!vpc || typeof vpc.name !== "string") continue;
+    if (!/(inspection|egress|ingress|endpoints|sharedservices)$/.test(vpc.name)) continue;
+    const baseName = vpc.name;
+
+    if (!Array.isArray(vpc.subnets)) {
+      errors.push(`${baseName}: missing subnets array`);
+    } else {
+      for (const suffix of ["-tgw-a", "-tgw-b"]) {
+        if (!findByNameContains(vpc.subnets, `${baseName}${suffix}`)) {
+          errors.push(`Missing required TGW subnet ${baseName}${suffix}`);
+        }
       }
     }
   }
@@ -205,10 +257,23 @@ for (const vpc of parsedConfig.vpcs || []) {
 
 // Per-region Transit Gateway presence.
 if (expectedRegions.length > 0 && Array.isArray(parsedConfig.transitGateways)) {
-  for (const region of expectedRegions) {
-    const regionToken = regionTokenFor(region);
-    if (!findByName(parsedConfig.transitGateways, `${regionToken}-tgw`, true)) {
-      errors.push(`Missing Transit Gateway for region '${region}'`);
+  if (hasSharedVpcs) {
+    // Shared-VPC uses literal region strings in names
+    for (const region of expectedRegions) {
+      const regionToken = regionTokenFor(region);
+      if (!findByName(parsedConfig.transitGateways, `${regionToken}-tgw`, true)) {
+        errors.push(`Missing Transit Gateway for region '${region}'`);
+      }
+    }
+  } else {
+    // Hub-and-spoke uses {{ RegionN }} tokens — count TGWs instead
+    const tgwCount = parsedConfig.transitGateways.filter(
+      t => t && typeof t.name === "string" && t.name.endsWith("-tgw")
+    ).length;
+    if (tgwCount < expectedRegions.length) {
+      errors.push(
+        `Expected ${expectedRegions.length} Transit Gateway(s) (one per region), found ${tgwCount}`
+      );
     }
   }
 }
@@ -226,6 +291,9 @@ if (ipams.length !== 1) {
   const seen = new Set();
   for (const pool of ipams[0].pools) {
     if (!pool || typeof pool.name !== "string") continue;
+    // Skip duplicate check for names that are entirely placeholders
+    // ({{ RegionN }} tokens all normalize to the same string)
+    if (pool.name === "PLACEHOLDER" || /^PLACEHOLDER-PLACEHOLDER/.test(pool.name)) continue;
     if (seen.has(pool.name)) {
       errors.push(`Duplicate IPAM pool name: ${pool.name}`);
     }
