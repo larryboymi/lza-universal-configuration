@@ -27,11 +27,11 @@ transitGateways:
     autoAcceptSharingAttachments: enable
     routeTables:
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw-rt-firewall"
-        routes:
-          - destinationCidrBlock: 0.0.0.0/0
-            attachment:
-              vpcName: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress"
-              account: Perimeter
+        routes: []
+          # - destinationCidrBlock: 0.0.0.0/0
+          #   attachment:
+          #     vpcName: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress"
+          #     account: Perimeter
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw-rt-spoke"
         routes:
           - destinationCidrBlock: 0.0.0.0/0
@@ -489,38 +489,38 @@ vpcs:
         routes: []
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress-rt-public-a"
         routes:
-          - name: TgwRoute
-            destination: "{{ GlobalCidr }}"
-            type: transitGateway
-            target: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw"
+          # - name: TgwRoute
+          #   destination: "{{ GlobalCidr }}"
+          #   type: transitGateway
+          #   target: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw"
           - name: Internet
             destination: 0.0.0.0/0
             type: internetGateway
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress-rt-public-b"
         routes:
-          - name: TgwRoute
-            destination: "{{ GlobalCidr }}"
-            type: transitGateway
-            target: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw"
+          # - name: TgwRoute
+          #   destination: "{{ GlobalCidr }}"
+          #   type: transitGateway
+          #   target: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw"
           - name: Internet
             destination: 0.0.0.0/0
             type: internetGateway
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress-rt-tgw-a"
         routes:
-          - name: TgwRoute
-            destination: "{{ GlobalCidr }}"
-            type: transitGateway
-            target: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw"
+          # - name: TgwRoute
+          #   destination: "{{ GlobalCidr }}"
+          #   type: transitGateway
+          #   target: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw"
           - name: Internet
             destination: 0.0.0.0/0
             type: natGateway
             target: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress-public-natgw-a"
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress-rt-tgw-b"
         routes:
-          - name: TgwRoute
-            destination: "{{ GlobalCidr }}"
-            type: transitGateway
-            target: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw"
+          # - name: TgwRoute
+          #   destination: "{{ GlobalCidr }}"
+          #   type: transitGateway
+          #   target: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw"
           - name: Internet
             destination: 0.0.0.0/0
             type: natGateway
@@ -573,17 +573,17 @@ vpcs:
         subnet: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress-public-a"
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress-public-natgw-b"
         subnet: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress-public-b"
-    transitGatewayAttachments:
-      - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress"
-        transitGateway:
-          name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw"
-          account: Network
-        routeTableAssociations:
-          - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw-rt-firewall"
-        routeTablePropagations: []
-        subnets:
-          - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress-tgw-a"
-          - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress-tgw-b"
+    # transitGatewayAttachments:
+    #   - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress"
+    #     transitGateway:
+    #       name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw"
+    #       account: Network
+    #     routeTableAssociations:
+    #       - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw-rt-firewall"
+    #     routeTablePropagations: []
+    #     subnets:
+    #       - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress-tgw-a"
+    #       - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress-tgw-b"
     gatewayEndpoints:
       defaultPolicy: Endpoint-Default
       endpoints:
