@@ -8,6 +8,16 @@ We highly recommend that you keep your environments up to date by upgrading to t
 
 When applying updates, review the changes in this release alongside your current configuration to decide which features from this version to adopt.
 
+## [1.3.0] - 2026-05-18
+
+### Bug Fixes
+
+- **Egress VPC Transit Gateway Route Table**: Fixed the egress VPC Transit Gateway attachment route table association from `tgw-rt-firewall` to `tgw-rt-spoke`. This ensures symmetric routing through the inspection VPC, which is required for stateful traffic inspection to function correctly.
+
+  **Upgrade Notes**: This change requires **two pipeline runs** with a **change window**. Run 1 removes the existing egress VPC TGW attachment and associated routes. Run 2 re-creates the attachment with the corrected `tgw-rt-spoke` association and restores all routes. There will be connectivity downtime between Run 1 (old attachment deleted) and Run 2 (new attachment created) for traffic traversing the egress path. Perform during a scheduled change window and validate connectivity after Run 2 completes.
+
+---
+
 ## [1.2.0] - 2026-03-20
 
 ### New Features

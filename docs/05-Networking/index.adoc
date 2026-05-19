@@ -57,8 +57,8 @@ flowchart TD
 
     Q1 -->|Manageable| HubSpoke[Hub & Spoke Architecture]
     Q1 -->|Severe| SharedVPC[Shared VPC Architecture]
-    
-    
+
+
     HubSpoke --> HubBenefits[✅ Clear boundaries<br>✅ Better for DevOps]
     SharedVPC --> SharedBenefits[✅ IP efficiency<br>✅ Lower complexity]
 ....
@@ -401,7 +401,7 @@ https://docs.aws.amazon.com/directconnect/latest/UserGuide/Welcome.html[AWS Dire
 
 To integrate an AWS Direct Connect connection with the Transit Gateway:
 
-1. Establish a Direct Connect connection to AWS 
+1. Establish a Direct Connect connection to AWS
 2. Create a Direct Connect Gateway
 3. Create a Transit Gateway association to your Direct Connect Gateway
 4. Update the Transit Gateway route tables to route traffic appropriately between your AWS VPCs and on-premises networks
@@ -781,8 +781,8 @@ To customize the Network Firewall rules:
 [source]
 ----
 # Example rule to allow traffic to a specific domain
-pass tls $HOME_NET any -> $EXTERNAL_NET any (tls.sni; content:".example.com"; startswith; nocase; endswith; 
-  classtype:not-suspicious; msg:"Allow traffic to example.com"; priority:1; 
+pass tls $HOME_NET any -> $EXTERNAL_NET any (tls.sni; content:".example.com"; startswith; nocase; endswith;
+  classtype:not-suspicious; msg:"Allow traffic to example.com"; priority:1;
   flow:to_server, established; sid:20002; rev:1;)
 ----
 
@@ -942,6 +942,8 @@ When implementing either networking model, consider these important decisions:
 3. *Sandbox VPC internet connectivity*: Decide whether sandbox VPCs should have internet access and VPC endpoints enabled by default.
 
 4. *AZ planning*: Determine whether VPCs should be provisioned with IP space for two or three availability zones based on your availability requirements.
+
+5. *Transit Gateway route table segmentation*: The default configuration implements two route tables (firewall and spoke) following the AWS Network Firewall centralized deployment model. Organizations with complex hybrid connectivity or strict environment isolation requirements may consider adding additional route tables for granular traffic control.
 
 == Additional Resources
 
