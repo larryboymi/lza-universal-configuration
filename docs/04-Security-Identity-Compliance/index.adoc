@@ -674,6 +674,51 @@ Service Control Policies represent the strongest form of access control in AWS O
 For a complete list of limitations, refer to the https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html#scp-effects-on-permissions[AWS Organizations documentation].
 ====
 
+=== Data Perimeter Controls (RCPs)
+
+link:https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps.html[Resource Control Policies (RCPs)] complement SCPs by applying guardrails directly to AWS resources rather than to identities. Where SCPs constrain what principals in your organization can do, RCPs constrain what can be done to your resources—regardless of who makes the request. Together they form the two sides of an link:https://aws.amazon.com/identity/data-perimeters-on-aws/[AWS data perimeter]: SCPs protect the identity boundary, RCPs protect the resource boundary.
+
+The LZA Universal Configuration deploys a single RCP (`lza-core-rcp-guardrails-1.json`) attached to the Infrastructure, Security, and Workloads OUs. It implements three data perimeter objectives across link:https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps.html#rcp-supported-services[all RCP-supported services]:
+
+==== Identity Perimeter — Blocking External Principals
+
+Four statements deny direct access by principals outside the AWS Organization, covering the full set of RCP-supported services:
+
+*STS (`GRSTSDPB`)*::
+Prevents external principals from assuming IAM roles in member accounts via `AssumeRole`, `AssumeRoleWithSAML`, or `AssumeRoleWithWebIdentity`. This closes the most critical identity perimeter gap—an overly permissive role trust policy could otherwise allow any AWS principal to assume a role in your accounts.
+
+*S3 (`GRS3DPB`)*::
+Prevents external principals from writing to, deleting from, or modifying S3 buckets and replication configuration.
+
+*SQS (`GRSQSDPB`)*::
+Prevents external principals from sending to, receiving from, or administering SQS queues.
+
+*Secrets Manager (`GSMDPB`)*::
+Prevents external principals from creating, modifying, or deleting secrets—protecting credentials and API keys from exfiltration.
+
+All four statements use the same condition pattern: deny unless `aws:PrincipalOrgID` matches your organization, with an exemption for AWS service principals (`aws:PrincipalIsAWSService`). This means AWS services acting on your behalf—including IAM Identity Center, Control Tower, and other managed services—are not affected.
+
+==== Confused Deputy Protection (`GRECDP`)
+
+Prevents AWS services from acting on your resources without a verifiable source ARN in your organization. This addresses the link:https://docs.aws.amazon.com/IAM/latest/UserGuide/confused-deputy.html[confused deputy problem], where a service with broad permissions could be tricked into acting on behalf of an external party. Applies to S3, SQS, KMS, Secrets Manager, and STS.
+
+==== Transport Security (`GRRST`)
+
+Denies all non-TLS requests to S3, SQS, KMS, Secrets Manager, and STS, ensuring data in transit is always encrypted.
+
+==== Additional Protections
+
+*KMS Key Protection (`GRKMS`)*::
+Prevents external principals from modifying or deleting LZA-managed KMS keys, protecting the encryption foundation of the landing zone.
+
+*Log Archive Protection (`GRS3OBJ`)*::
+Restricts access to the Control Tower log archive bucket to CloudTrail and Config only, preserving the integrity of the audit trail.
+
+[IMPORTANT]
+====
+The STS identity perimeter statement (`GRSTSDPB`) blocks cross-account role assumption from any principal outside your organization. Before deploying broadly, use link:https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html[IAM Access Analyzer] to review existing external access findings and confirm no legitimate cross-account patterns—such as third-party tool integrations or partner trust relationships—would be affected. Deploy to a test OU first and validate with CloudTrail before expanding to production OUs.
+====
+
 === Detective Controls (Config Rules)
 
 While SCPs provide preventative guardrails that cannot be bypassed, the LZA Universal Configuration also implements comprehensive detective controls through AWS Config rules. These rules continuously evaluate the configuration of resources across your AWS environment, detecting any deviations from security best practices or organizational requirements.

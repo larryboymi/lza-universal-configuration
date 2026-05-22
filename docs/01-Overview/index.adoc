@@ -318,6 +318,58 @@ Least-Privilege Principle: SCPs enforce minimum necessary permissions based on a
 * The Root OU (organization management account) is intentionally excluded from SCPs to prevent lockout scenarios
 * SCPs are designed to allow LZA pipeline automation while preventing manual changes to protected resources
 
+===== Resource Control Policies
+
+link:https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps.html[Resource Control Policies (RCPs)] are organization-wide guardrails applied directly to AWS resources rather than to identities. Where SCPs limit what principals in your organization can do, RCPs limit what can be done to your resources—regardless of which identity makes the request. Together they form the foundation of an link:https://aws.amazon.com/identity/data-perimeters-on-aws/[AWS data perimeter].
+
+The LZA Universal Configuration deploys a single RCP (`lza-core-rcp-guardrails-1.json`) attached to the Infrastructure, Security, and Workloads OUs. It implements data perimeter objectives:
+
+[cols="1,2,2", options="header"]
+|===
+|Statement ID |Objective |What it blocks
+
+|`GRS3DPB`
+|Resource perimeter — S3
+|External principals from writing to, deleting from, or modifying S3 buckets and replication configuration
+
+|`GRECDP`
+|Confused deputy protection
+|AWS services acting without a source ARN in your organization from calling S3, SQS, KMS, Secrets Manager, and STS on your resources
+
+|`GRRST`
+|Transport security
+|Unencrypted (non-TLS) requests to S3, SQS, KMS, Secrets Manager, and STS
+
+|`GRKMS`
+|KMS key protection
+|External principals from modifying or deleting LZA-managed KMS keys
+
+|`GRSTSDPB`
+|Identity perimeter — STS
+|External principals (outside the AWS Organization) from assuming IAM roles in member accounts via `AssumeRole`, `AssumeRoleWithSAML`, or `AssumeRoleWithWebIdentity`
+
+|`GRSQSDPB`
+|Resource perimeter — SQS
+|External principals from sending to, receiving from, or administering SQS queues
+
+|`GSMDPB`
+|Resource perimeter — Secrets Manager
+|External principals from creating, modifying, or deleting secrets
+
+|`GRS3OBJ`
+|Log archive protection
+|All principals except CloudTrail and Config from reading or writing the Control Tower log archive bucket
+|===
+
+[discrete]
+===== Implementation Considerations
+
+* RCPs apply to link:https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps.html#rcp-supported-services[a specific set of AWS services]; services not on that list are unaffected
+* RCPs have a 5,120 character maximum. LZA automatically minifies policy JSON before upload, so formatted file size is not a concern
+* All statements use `${ORG_ID}` which LZA resolves at deploy time via `replacements-config.yaml`
+* AWS services acting on your behalf (e.g. IAM Identity Center, Control Tower) are excluded via the `aws:PrincipalIsAWSService` condition and are not blocked
+* Before deploying broadly, use link:https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html[IAM Access Analyzer] to review existing external access findings and validate that no legitimate cross-account patterns are blocked
+
 === Accounts Configuration
 
 The `accounts-config.yaml` file defines the AWS accounts in place within the AWS Organization.  The LZA solution requires certain mandatory accounts to be defined.  All AWS accounts in the AWS organization must be specified for all Organizational Units unless the organizational unit is specifically excluded in the `organizations-config.yaml`.

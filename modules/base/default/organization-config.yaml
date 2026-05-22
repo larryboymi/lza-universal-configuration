@@ -38,6 +38,7 @@ resourceControlPolicies:
   - name: "{{ AcceleratorPrefix }}-Core-Rcp-Guardrails"
     description: >
       A comprehensive data perimeter policy that allows external read-only access while protecting AWS resources from unauthorized modifications and enforcing secure communications.
+      Includes identity perimeter controls for STS to block cross-account role assumption from principals outside the Organization.
     policy: rcp-policies/lza-core-rcp-guardrails-1.json
     deploymentTargets:
       organizationalUnits:

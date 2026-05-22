@@ -10,6 +10,12 @@ When applying updates, review the changes in this release alongside your current
 
 ## [1.3.0] - 2026-05-18
 
+### New Features
+
+- **Data Perimeter Controls (RCPs)**: Added identity and resource perimeter controls for STS, SQS, and Secrets Manager (`GRSTSDPB`, `GRSQSDPB`, `GSMDPB`) to block external principals from accessing resources in member accounts.
+
+  **Upgrade Notes**: If any accounts have legitimate cross-account integrations with principals outside the organization, these statements will block those integrations. Use IAM Access Analyzer to review existing external access findings before deploying.
+
 ### Bug Fixes
 
 - **Egress VPC Transit Gateway Route Table**: Fixed the egress VPC Transit Gateway attachment route table association from `tgw-rt-firewall` to `tgw-rt-spoke`. This ensures symmetric routing through the inspection VPC, which is required for stateful traffic inspection to function correctly.
