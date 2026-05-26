@@ -12,6 +12,13 @@ When applying updates, review the changes in this release alongside your current
 
 ### New Features
 
+- **Amazon Bedrock AgentCore SCP Guardrails**: Added three SCP statements (`GRAGENTCORE1`, `GRAGENTCORE2`, `GRAGENTCORE3`) to both the Workloads and Infrastructure guardrail policies enforcing VPC isolation and encryption for AgentCore resources:
+  - Denies creation/update of AgentCore Runtimes, Code Interpreters, and Browsers without VPC subnet and security group configuration
+  - Denies AgentCore Runtime invocations that do not originate from a VPC
+  - Denies creation of AgentCore Memory resources without a customer-managed KMS key
+
+  **Upgrade Notes**: Existing AgentCore resources deployed without VPC configuration or KMS encryption will not be affected retroactively, but any new resource creation or updates must comply with these controls. Ensure infrastructure and workload accounts have appropriate VPC subnets, security groups, and KMS keys provisioned before deploying AgentCore resources.
+
 - **Data Perimeter Controls (RCPs)**: Added identity and resource perimeter controls for STS, SQS, and Secrets Manager (`GRSTSDPB`, `GRSQSDPB`, `GSMDPB`) to block external principals from accessing resources in member accounts.
 
   **Upgrade Notes**: If any accounts have legitimate cross-account integrations with principals outside the organization, these statements will block those integrations. Use IAM Access Analyzer to review existing external access findings before deploying.
