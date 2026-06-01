@@ -19,7 +19,7 @@ const {
   extendTopLevel,
   extendNetworkFirewallList,
   extendIpamPools,
-  extendDnsFirewallRegions,
+  extendDnsFirewallRuleGroups,
   linesToText,
   makeIncludeLineRe,
 } = require("./lib/multi-region-utils");
@@ -59,6 +59,8 @@ function deriveHubSpokeFilename(sectionHint) {
         return "nfw-policy.yaml";
       case "rules":
         return "nfw-rule-group.yaml";
+      case "dnsFirewallRuleGroups":
+        return "dns-firewall-rule-group.yaml";
       case "vpcs":
         return `vpc-${suffix}.yaml`;
       case "vpcTemplates":
@@ -110,7 +112,7 @@ try {
   lines = extendNetworkFirewallList(lines, "firewalls", sectionCtx);
   lines = extendNetworkFirewallList(lines, "policies", sectionCtx);
   lines = extendNetworkFirewallList(lines, "rules", sectionCtx);
-  lines = extendDnsFirewallRegions(lines, sectionCtx);
+  lines = extendDnsFirewallRuleGroups(lines, sectionCtx);
   lines = extendTopLevel(lines, "vpcs", sectionCtx);
   lines = extendTopLevel(lines, "vpcTemplates", sectionCtx);
 

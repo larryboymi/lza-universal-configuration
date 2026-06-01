@@ -493,37 +493,37 @@ function makeIncludeLineRe(fragmentBaseRel) {
 }
 
 /**
- * Extends route53Resolver.firewallRuleGroups[].regions arrays with non-home regions.
- * DNS Firewall rule groups are defined with only the home region; this function
- * appends all non-home regions so the rule group is deployed to every enabled region.
+ * Clones route53Resolver.firewallRuleGroups items for each non-home region.
+ * Each clone gets a region-specific name and regions array, matching the
+ * Network Firewall clone pattern (per-region fragment files with !include).
  */
-function extendDnsFirewallRegions(lines, ctx) {
+function extendDnsFirewallRuleGroups(lines, ctx) {
   const cnsIdx = findSectionStart(lines, "centralNetworkServices");
   if (cnsIdx === -1) return lines;
   const cnsEnd = findSectionEnd(lines, cnsIdx);
   const resolverIdx = findNestedKey(lines, cnsIdx + 1, cnsEnd, 2, "route53Resolver");
   if (resolverIdx === -1) return lines;
+  const frgIdx = findNestedKey(lines, resolverIdx + 1, cnsEnd, 4, "firewallRuleGroups");
+  if (frgIdx === -1) return lines;
 
-  const result = [...lines];
-  let offset = 0;
-
-  for (let i = resolverIdx + 1; i < cnsEnd; i++) {
+  // Find the end of the firewallRuleGroups list
+  let listEnd = cnsEnd;
+  for (let i = frgIdx + 1; i < cnsEnd; i++) {
     const line = lines[i];
-    if (/^\s{8}regions:\s*$/.test(line)) {
-      let regionsEnd = i + 1;
-      while (regionsEnd < cnsEnd && /^\s{10}-\s/.test(lines[regionsEnd])) {
-        regionsEnd++;
-      }
-      const newLines = ctx.nonHomeRegions.map(region => `          - "${region}"`);
-      result.splice(regionsEnd + offset, 0, ...newLines);
-      offset += newLines.length;
-    }
+    if (line.length === 0) continue;
+    const leading = line.length - line.trimStart().length;
+    if (leading <= 4 && !line.startsWith("      ")) { listEnd = i; break; }
+    if (leading < 4) { listEnd = i; break; }
   }
 
-  if (offset > 0) {
-    console.log(`  route53Resolver.firewallRuleGroups: added ${ctx.nonHomeRegions.length} region(s) to DNS Firewall rule groups.`);
-  }
-  return result;
+  return processSection(lines, {
+    itemIndent: 6,
+    from: frgIdx + 1,
+    to: listEnd,
+    label: "route53Resolver.firewallRuleGroups",
+    ...ctx,
+    deriveFilename: ctx.deriveFilename("dnsFirewallRuleGroups"),
+  });
 }
 
 module.exports = {
@@ -545,7 +545,7 @@ module.exports = {
   extendTopLevel,
   extendNetworkFirewallList,
   extendIpamPools,
-  extendDnsFirewallRegions,
+  extendDnsFirewallRuleGroups,
   updateReplacementsConfig,
   initRegionContext,
   linesToText,
