@@ -106,6 +106,26 @@
           "rds:StorageEncrypted": "false"
         }
       }
+    },
+    {
+      "Sid": "GRAGENTCORE3",
+      "Effect": "Deny",
+      "Action": [
+        "bedrock-agentcore:CreateMemory"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "bedrock-agentcore:KmsKeyArn": "true"
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:${PARTITION}:iam::*:role/cdk-accel*"
+          ]
+        }
+      }
     }
   ]
 }
