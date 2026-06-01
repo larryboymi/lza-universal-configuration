@@ -492,6 +492,28 @@ The Network Firewall rules are defined in the `firewall-rules/rules.txt` file. T
 5. Updating rules when new applications or services are deployed
 ====
 
+=== DNS Firewall
+
+https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resolver-dns-firewall.html[Route 53 Resolver DNS Firewall] filters outbound DNS queries from VPCs, blocking resolution of domains associated with known threats. This provides DNS-layer protection against data exfiltration, malware communication, and botnet command-and-control activity across all VPCs in the landing zone.
+
+The LZA Universal Configuration deploys a DNS Firewall rule group using https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resolver-dns-firewall-managed-domain-lists.html[AWS-managed domain lists]:
+
+* *AWSManagedDomainsAggregateThreatList*: Consolidated list of domains associated with multiple threat categories
+* *AWSManagedDomainsMalwareDomainList*: Domains hosting or distributing malware
+* *AWSManagedDomainsBotnetCommandandControl*: Domains used for botnet command-and-control communication
+
+The rule group is:
+
+* Shared via https://docs.aws.amazon.com/ram/latest/userguide/what-is.html[AWS RAM] to Workloads/Dev, Workloads/Test, Workloads/Prod OUs and SharedServices, Network, and Perimeter accounts
+* Associated with all LZA-managed VPCs: Endpoints, Inspection, Ingress, Egress, SharedServices, Dev, Test, and Prod
+* Explicitly excluded from Sandbox (no LZA-managed VPC deployed there)
+* Protected with `mutationProtection: ENABLED` to prevent unauthorized disassociation
+
+NOTE: Sandbox accounts have no LZA-managed VPC and therefore no DNS Firewall association. This is by design — Sandbox allows unrestricted DNS for rapid iteration.
+
+*Cost Impact*::
+Route 53 Resolver DNS Firewall charges https://aws.amazon.com/route53/pricing/[$0.60 per million DNS queries processed] for the first billion queries, and $0.40 per million thereafter. There is no charge for the rule group itself or for using AWS-managed domain lists. For a typical workload VPC generating 1–5 million DNS queries per month, the cost is under $3/month per VPC. This applies to all DNS queries originating from within the VPC, regardless of whether they match a rule.
+
 == Hub and Spoke Architecture (Default)
 
 https://docs.aws.amazon.com/vpc/latest/tgw/transit-gateway-centralized-router.html[Hub and Spoke] is a network design pattern where all network traffic flows through a central point (the hub) before reaching its destination. In AWS, this pattern is typically implemented using Transit Gateway as the hub, with VPCs connected to it as spokes.

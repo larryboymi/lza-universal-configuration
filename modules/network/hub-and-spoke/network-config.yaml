@@ -225,6 +225,41 @@ centralNetworkServices:
           # Add additional accounts/Organizational units (OUs) only if broader sharing is required
           accounts: []
 
+  # Route 53 Resolver DNS Firewall
+  route53Resolver:
+    firewallRuleGroups:
+      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+        regions:
+          - "{{ HomeRegion }}"
+        rules:
+          - name: block-aggregate-threats
+            action: BLOCK
+            blockResponse: NODATA
+            managedDomainList: AWSManagedDomainsAggregateThreatList
+            priority: 100
+          - name: block-malware-domains
+            action: BLOCK
+            blockResponse: NODATA
+            managedDomainList: AWSManagedDomainsMalwareDomainList
+            priority: 200
+          - name: block-botnet-cnc
+            action: BLOCK
+            blockResponse: NODATA
+            managedDomainList: AWSManagedDomainsBotnetCommandandControl
+            priority: 300
+        shareTargets:
+          accounts:
+            - SharedServices
+            - Network
+            - Perimeter
+          organizationalUnits:
+            - Workloads/Dev
+            - Workloads/Test
+            - Workloads/Prod
+        tags:
+          - key: Accelerator
+            value: "{{ AcceleratorPrefix }}"
+
 endpointPolicies:
   # Endpoint policies
   #   - Use these policies to define standard policies for VPC endpoints
@@ -348,6 +383,10 @@ vpcs:
         # - service: ssm-contacts
         - service: ssm-incidents
         - service: ssmmessages
+    dnsFirewallRuleGroups:
+      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+        priority: 101
+        mutationProtection: ENABLED
 
   # VPC Ingress
   #  - Deploys to perimeter account
@@ -463,6 +502,10 @@ vpcs:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
+    dnsFirewallRuleGroups:
+      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+        priority: 101
+        mutationProtection: ENABLED
 
   # VPC Egress
   #  - Deploys to perimeter account
@@ -590,6 +633,10 @@ vpcs:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
+    dnsFirewallRuleGroups:
+      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+        priority: 101
+        mutationProtection: ENABLED
 
   # VPC Inspection
   #  - Utilizes AWS Network Firewall for inspection of all North-South and East-West traffic
@@ -677,6 +724,10 @@ vpcs:
           - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-inspection-tgw-a"
           - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-inspection-tgw-b"
     useCentralEndpoints: true
+    dnsFirewallRuleGroups:
+      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+        priority: 101
+        mutationProtection: ENABLED
 
   # VPC SharedServices
   #  - Deploys to SharedServices account
@@ -814,6 +865,10 @@ vpcs:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
+    dnsFirewallRuleGroups:
+      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+        priority: 101
+        mutationProtection: ENABLED
 
 vpcTemplates:
   # VPC Templates for Dev Workloads
@@ -932,6 +987,10 @@ vpcTemplates:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
+    dnsFirewallRuleGroups:
+      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+        priority: 101
+        mutationProtection: ENABLED
 
   # VPC Templates for Test Workloads
   - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-test"
@@ -1049,6 +1108,10 @@ vpcTemplates:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
+    dnsFirewallRuleGroups:
+      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+        priority: 101
+        mutationProtection: ENABLED
 
   # VPC Templates for Prod Workloads
   - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-prod"
@@ -1166,6 +1229,10 @@ vpcTemplates:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
+    dnsFirewallRuleGroups:
+      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+        priority: 101
+        mutationProtection: ENABLED
 
 
 # VPC Flow Logs
