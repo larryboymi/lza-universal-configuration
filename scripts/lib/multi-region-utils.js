@@ -460,7 +460,7 @@ function initRegionContext(scriptName) {
 
   console.log(
     `Pool layout: ${enabledRegions.length} region(s) → /${layout.regionPrefix} per region, ` +
-      `/${layout.workloadPrefix} workload pools (max ${layout.maxRegions}).`
+    `/${layout.workloadPrefix} workload pools (max ${layout.maxRegions}).`
   );
 
   const networkConfigPath = path.resolve(inputFolder, "network-config.yaml");
@@ -492,6 +492,40 @@ function makeIncludeLineRe(fragmentBaseRel) {
   return new RegExp(`!include\\s+(${fragmentBaseRel.replace(/\//g, "\\/")}\\/[^\\s]+)`);
 }
 
+/**
+ * Extends route53Resolver.firewallRuleGroups[].regions arrays with non-home regions.
+ * DNS Firewall rule groups are defined with only the home region; this function
+ * appends all non-home regions so the rule group is deployed to every enabled region.
+ */
+function extendDnsFirewallRegions(lines, ctx) {
+  const cnsIdx = findSectionStart(lines, "centralNetworkServices");
+  if (cnsIdx === -1) return lines;
+  const cnsEnd = findSectionEnd(lines, cnsIdx);
+  const resolverIdx = findNestedKey(lines, cnsIdx + 1, cnsEnd, 2, "route53Resolver");
+  if (resolverIdx === -1) return lines;
+
+  const result = [...lines];
+  let offset = 0;
+
+  for (let i = resolverIdx + 1; i < cnsEnd; i++) {
+    const line = lines[i];
+    if (/^\s{8}regions:\s*$/.test(line)) {
+      let regionsEnd = i + 1;
+      while (regionsEnd < cnsEnd && /^\s{10}-\s/.test(lines[regionsEnd])) {
+        regionsEnd++;
+      }
+      const newLines = ctx.nonHomeRegions.map(region => `          - "${region}"`);
+      result.splice(regionsEnd + offset, 0, ...newLines);
+      offset += newLines.length;
+    }
+  }
+
+  if (offset > 0) {
+    console.log(`  route53Resolver.firewallRuleGroups: added ${ctx.nonHomeRegions.length} region(s) to DNS Firewall rule groups.`);
+  }
+  return result;
+}
+
 module.exports = {
   ASN_BASE,
   chooseLayout,
@@ -511,6 +545,7 @@ module.exports = {
   extendTopLevel,
   extendNetworkFirewallList,
   extendIpamPools,
+  extendDnsFirewallRegions,
   updateReplacementsConfig,
   initRegionContext,
   linesToText,

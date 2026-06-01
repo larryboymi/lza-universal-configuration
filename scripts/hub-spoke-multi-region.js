@@ -19,6 +19,7 @@ const {
   extendTopLevel,
   extendNetworkFirewallList,
   extendIpamPools,
+  extendDnsFirewallRegions,
   linesToText,
   makeIncludeLineRe,
 } = require("./lib/multi-region-utils");
@@ -109,6 +110,7 @@ try {
   lines = extendNetworkFirewallList(lines, "firewalls", sectionCtx);
   lines = extendNetworkFirewallList(lines, "policies", sectionCtx);
   lines = extendNetworkFirewallList(lines, "rules", sectionCtx);
+  lines = extendDnsFirewallRegions(lines, sectionCtx);
   lines = extendTopLevel(lines, "vpcs", sectionCtx);
   lines = extendTopLevel(lines, "vpcTemplates", sectionCtx);
 
