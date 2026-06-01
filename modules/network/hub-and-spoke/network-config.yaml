@@ -228,7 +228,7 @@ centralNetworkServices:
   # Route 53 Resolver DNS Firewall
   route53Resolver:
     firewallRuleGroups:
-      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+      - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall"
         regions:
           - "{{ HomeRegion }}"
         rules:
@@ -384,7 +384,7 @@ vpcs:
         - service: ssm-incidents
         - service: ssmmessages
     dnsFirewallRuleGroups:
-      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+      - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall"
         priority: 101
         mutationProtection: ENABLED
 
@@ -503,7 +503,7 @@ vpcs:
         - service: dynamodb
     useCentralEndpoints: true
     dnsFirewallRuleGroups:
-      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+      - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall"
         priority: 101
         mutationProtection: ENABLED
 
@@ -634,7 +634,7 @@ vpcs:
         - service: dynamodb
     useCentralEndpoints: true
     dnsFirewallRuleGroups:
-      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+      - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall"
         priority: 101
         mutationProtection: ENABLED
 
@@ -725,7 +725,7 @@ vpcs:
           - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-inspection-tgw-b"
     useCentralEndpoints: true
     dnsFirewallRuleGroups:
-      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+      - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall"
         priority: 101
         mutationProtection: ENABLED
 
@@ -866,7 +866,7 @@ vpcs:
         - service: dynamodb
     useCentralEndpoints: true
     dnsFirewallRuleGroups:
-      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+      - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall"
         priority: 101
         mutationProtection: ENABLED
 
@@ -988,7 +988,7 @@ vpcTemplates:
         - service: dynamodb
     useCentralEndpoints: true
     dnsFirewallRuleGroups:
-      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+      - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall"
         priority: 101
         mutationProtection: ENABLED
 
@@ -1109,7 +1109,7 @@ vpcTemplates:
         - service: dynamodb
     useCentralEndpoints: true
     dnsFirewallRuleGroups:
-      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+      - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall"
         priority: 101
         mutationProtection: ENABLED
 
@@ -1230,7 +1230,7 @@ vpcTemplates:
         - service: dynamodb
     useCentralEndpoints: true
     dnsFirewallRuleGroups:
-      - name: "{{ AcceleratorPrefix }}-dns-firewall"
+      - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall"
         priority: 101
         mutationProtection: ENABLED
 
