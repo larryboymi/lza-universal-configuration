@@ -509,7 +509,7 @@ The rule group is:
 * Explicitly excluded from Sandbox (no LZA-managed VPC deployed there)
 * Protected with `mutationProtection: ENABLED` to prevent unauthorized disassociation
 
-NOTE: Sandbox accounts have no LZA-managed VPC and therefore no DNS Firewall association. This is by design — Sandbox allows unrestricted DNS for rapid iteration.
+NOTE: The Network account owns the DNS Firewall rule groups and accesses them directly without RAM sharing. The Network account should not be included in `shareTargets` as the owning account does not need to be a share recipient. Sandbox accounts have no LZA-managed VPC and therefore no DNS Firewall association. This is by design — Sandbox allows unrestricted DNS for rapid iteration.
 
 *Cost Impact*::
 Route 53 Resolver DNS Firewall charges https://aws.amazon.com/route53/pricing/[$0.60 per million DNS queries processed] for the first billion queries, and $0.40 per million thereafter. There is no charge for the rule group itself or for using AWS-managed domain lists. For a typical workload VPC generating 1–5 million DNS queries per month, the cost is under $3/month per VPC. This applies to all DNS queries originating from within the VPC, regardless of whether they match a rule.

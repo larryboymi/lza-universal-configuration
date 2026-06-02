@@ -250,7 +250,6 @@ centralNetworkServices:
         shareTargets:
           accounts:
             - SharedServices
-            - Network
             - Perimeter
           organizationalUnits:
             - Workloads/Dev
