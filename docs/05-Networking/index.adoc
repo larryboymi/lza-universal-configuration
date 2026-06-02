@@ -159,6 +159,25 @@ The Central Endpoints VPC allows multiple accounts to access AWS services privat
 * *Enhanced security*: Enables implementation of a strong data perimeter using VPC endpoint policies footnote:Perimeter_EndpointPolicies[https://aws.amazon.com/blogs/security/establishing-a-data-perimeter-on-aws/]
 * *Efficient IP address utilization*: Reduces the number of IP addresses required to access AWS services while maintaining private connectivity
 
+The central endpoints VPC includes https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/vpc-interface-endpoints.html[Amazon Bedrock AgentCore PrivateLink endpoints] for private access to AI agent services:
+
+* `bedrock-agentcore` — Data plane (Runtime, Memory, Code Interpreter, Browser, Identity)
+* `bedrock-agentcore-control` — Control plane (Runtime/Memory management)
+* `bedrock-agentcore.gateway` — Gateway invocation
+
+Restrictive endpoint policies (`AgentCore-DataPlane`, `AgentCore-Gateway`) are provided for Prod environments. These scope allowed actions to data-plane operations only. For OAuth-authenticated Gateway traffic, the `Principal` must be `"*"` as https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/vpc-interface-endpoints.html[documented by AWS] — VPC endpoint policies cannot restrict based on OAuth identity.
+
+[IMPORTANT]
+====
+Before applying the restrictive endpoint policies, customers must:
+
+1. *Understand the organization boundary enforcement*:
+** Both `AgentCore-DataPlane` and `AgentCore-Gateway` use https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-resourceorgid[`aws:ResourceOrgID`] to ensure that only AgentCore resources belonging to your organization can be accessed through the endpoint. This approach works for both IAM (SigV4) and OAuth callers because it restricts based on the *resource being accessed* rather than the caller's identity. The endpoint cannot be used to reach AgentCore resources in other organizations.
+** For customers who use only SigV4 authentication (no OAuth), the data plane policy can be further tightened by replacing `aws:ResourceOrgID` with https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-principalorgid[`aws:PrincipalOrgID`] to restrict by caller identity. However, this will block OAuth callers — use only if your Runtimes are exclusively SigV4-authenticated.
+2. *Regional availability*: AgentCore PrivateLink endpoints are not available in all regions. Verify availability in your deployment region before enabling. See https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-regions.html[AgentCore supported regions].
+3. *Apply policies per-endpoint*: To use the restrictive policies instead of the default, set `applyPolicy: true` and `policy: AgentCore-DataPlane` (or `AgentCore-Gateway`) on the relevant endpoint entry in `network-config.yaml`.
+====
+
 ==== Central Inspection
 
 The Central Inspection VPC hosts AWS Network Firewall and provides a scalable, dedicated method for inspecting and filtering both north-south (internet) and east-west (VPC-to-VPC) traffic.

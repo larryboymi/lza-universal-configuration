@@ -264,6 +264,10 @@ endpointPolicies:
   #   - Use these policies to define standard policies for VPC endpoints
   - name: Endpoint-Default
     document: vpc-endpoint-policies/default.json
+  - name: AgentCore-DataPlane
+    document: vpc-endpoint-policies/agentcore-data-plane.json
+  - name: AgentCore-Gateway
+    document: vpc-endpoint-policies/agentcore-gateway.json
 
 vpcs:
   # VPC Endpoints
@@ -382,6 +386,10 @@ vpcs:
         # - service: ssm-contacts
         - service: ssm-incidents
         - service: ssmmessages
+        # Amazon Bedrock AgentCore endpoints
+        - service: bedrock-agentcore
+        - service: bedrock-agentcore-control
+        - service: bedrock-agentcore.gateway
     dnsFirewallRuleGroups:
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall"
         priority: 101
