@@ -136,6 +136,9 @@ Comprehensive guide to integrating Microsoft Active Directory with LZA. Covers A
 === link:./07-09-Integrating-Third-Party-Solutions.adoc[07-09-Integrating-Third-Party-Solutions]
 Instructions for integrating third-party solutions with LZA using CloudFormation stacks and StackSets. Includes common integration patterns for monitoring and security tools across your AWS organization.
 
+=== link:./07-11-Managing-Stack-Policies.adoc[07-11-Managing-Stack-Policies]
+Step-by-step guide for managing AWS CloudFormation Stack Policies in LZA. Covers temporarily disabling protection to update critical resources, adding new protected resource types, and verifying policy status.
+
 [IMPORTANT]
 ====
 Before making any changes to your LZA configuration, thoroughly review the relevant operation guide to understand the full impact of your changes and follow best practices specific to that area.

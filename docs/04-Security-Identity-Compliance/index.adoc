@@ -736,6 +736,56 @@ Restricts access to the Control Tower log archive bucket to CloudTrail and Confi
 The STS identity perimeter statement (`GRSTSDPB`) blocks cross-account role assumption from any principal outside your organization. Before deploying broadly, use link:https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html[IAM Access Analyzer] to review existing external access findings and confirm no legitimate cross-account patterns—such as third-party tool integrations or partner trust relationships—would be affected. Deploy to a test OU first and validate with CloudTrail before expanding to production OUs.
 ====
 
+=== AWS CloudFormation Stack Policy Protection
+
+link:https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/protect-stack-resources.html[AWS CloudFormation Stack Policies] provide an additional layer of infrastructure protection by preventing accidental replacement or deletion of critical networking resources during stack updates. While SCPs and RCPs control who can perform actions and what can be done to resources, stack policies control what CloudFormation itself is allowed to modify within a stack update operation.
+
+==== Why Stack Policies
+
+LZA deploys foundational networking infrastructure that workloads across the organization depend on. An unintentional `Update:Replace` or `Update:Delete` during a stack update could cause widespread connectivity loss, DNS resolution failures, or security inspection bypass. Stack policies act as a fail-safe mechanism that complements IAM and SCP controls:
+
+* *SCPs* prevent unauthorized identities from making changes
+* *RCPs* prevent unauthorized access to resources regardless of identity
+* *Stack Policies* prevent CloudFormation from replacing or deleting critical networking resources even when the identity has permission to do so
+
+This defense-in-depth approach ensures that even authorized pipeline operations cannot accidentally destroy infrastructure that would cause cascading failures.
+
+==== Implementation
+
+The LZA Universal Configuration enables stack policies in `global-config.yaml` with a deny-by-default approach for protected resource types. The policy:
+
+* Explicitly denies `Update:Replace` and `Update:Delete` operations for protected resource types
+* Allows `Update:Modify` operations (in-place updates that do not destroy the resource)
+* Allows all operations on non-protected resource types
+
+==== Protected Resource Types
+
+The configuration protects 27 critical networking resource types across four categories:
+
+[cols="1,3", options="header"]
+|===
+|Category |Protected Resources
+
+|*VPC Infrastructure*
+|VPC, Subnet, VPCCidrBlock, SecurityGroup, FlowLog, VPCGatewayAttachment, VPCEndpoint
+
+|*Routing*
+|RouteTable, Route, SubnetRouteTableAssociation, InternetGateway, NatGateway, PrefixList
+
+|*Transit Gateway*
+|TransitGateway, TransitGatewayVpcAttachment, TransitGatewayRouteTable, TransitGatewayRoute, TransitGatewayRouteTableAssociation, TransitGatewayRouteTablePropagation, TransitGatewayPeeringAttachment
+
+|*Network Security and Shared Services*
+|NetworkFirewall::Firewall, NetworkFirewall::FirewallPolicy, NetworkFirewall::LoggingConfiguration, NetworkFirewall::RuleGroup, RAM::ResourceShare, Route53Resolver::ResolverEndpoint, Route53Resolver::ResolverRule
+|===
+
+==== Operational Considerations
+
+* Stack policies only protect resources during CloudFormation stack updates. Direct API, CLI, or Console modifications are governed by SCPs and IAM policies.
+* Stack policies do not prevent deletion of an entire stack. Use `terminationProtection: true` (also enabled in this configuration) to prevent stack deletion.
+* To update a protected resource, refer to link:../07-Operations/07-11-Managing-Stack-Policies.adoc[Managing Stack Policies] for the detailed procedure.
+* Only LZA-managed stacks are affected. Stacks created outside of LZA are not impacted.
+
 === Detective Controls (Config Rules)
 
 While SCPs provide preventative guardrails that cannot be bypassed, the LZA Universal Configuration also implements comprehensive detective controls through AWS Config rules. These rules continuously evaluate the configuration of resources across your AWS environment, detecting any deviations from security best practices or organizational requirements.

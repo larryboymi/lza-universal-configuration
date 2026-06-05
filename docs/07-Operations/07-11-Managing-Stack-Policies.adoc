@@ -1,0 +1,182 @@
+
+== Managing AWS CloudFormation Stack Policies
+
+=== Introduction
+
+AWS CloudFormation Stack Policies protect critical infrastructure resources from accidental replacement or deletion during stack updates. The LZA Universal Configuration enables stack policies by default to safeguard networking resources that workloads across the organization depend on.
+
+This guide covers how to work with stack policies when you need to modify protected resources.
+
+=== Understanding Stack Policy Behavior
+
+Stack policies apply only during `UpdateStack` operations. They do not affect:
+
+* Initial resource creation
+* Direct API, CLI, or Console modifications (governed by SCPs and IAM)
+* Stack deletion (governed by `terminationProtection`)
+
+The LZA stack policy denies two specific update actions on protected resource types:
+
+* `Update:Replace` — CloudFormation would delete the existing resource and create a new one
+* `Update:Delete` — CloudFormation would remove the resource entirely
+
+`Update:Modify` (in-place changes) is allowed on all resources.
+
+=== When You Need to Disable Stack Policies
+
+Common scenarios requiring temporary stack policy disablement:
+
+* Replacing a VPC or subnet due to CIDR changes
+* Replacing a Transit Gateway attachment to change route table associations
+* Replacing a Network Firewall to change subnet mappings
+* Removing a VPC Endpoint that is no longer needed
+* Replacing a Route53 Resolver endpoint to change VPC associations
+
+=== Procedure: Updating a Protected Resource
+
+When you need to replace or delete a protected resource, temporarily disable the stack policy, deploy your change, then re-enable protection. This requires two pipeline runs.
+
+==== Run 1 — Disable Protection and Deploy Change
+
+In a single commit, make both changes:
+
+1. Edit `global-config.yaml` and set `enable` to `false`:
++
+[source,yaml]
+----
+stackPolicy:
+  enable: false
+  protectedTypes:
+    - "AWS::EC2::FlowLog"
+    - "AWS::EC2::InternetGateway"
+    # ... types unchanged
+----
+
+2. Make your infrastructure change (e.g., changing a Transit Gateway route table association in `network-config.yaml`)
+
+Run the LZA pipeline. The pipeline stages execute as follows:
+
+* *PREPARE stage*: `enable: false` triggers the `createAllowStackPolicy()` path, applying an allow-all policy to every LZA-managed stack. Any prior deny policy is cleared.
+* *Deploy stages*: CloudFormation proceeds with the replacement or deletion because the allow-all policy permits `Update:Replace` and `Update:Delete`. Your change deploys successfully.
+* *FINALIZE stage*: `enable: false` causes the finalize step to skip. No policy is re-applied.
+
+End of Run 1: change deployed, stacks unprotected.
+
+==== Run 2 — Restore Protection
+
+Edit `global-config.yaml` and set `enable` back to `true`:
+
+[source,yaml]
+----
+stackPolicy:
+  enable: true
+  protectedTypes:
+    - "AWS::EC2::FlowLog"
+    - "AWS::EC2::InternetGateway"
+    # ... types unchanged
+----
+
+No other changes are needed. Run the LZA pipeline:
+
+* *PREPARE stage*: `enable: true` causes the prepare step to skip.
+* *Deploy stages*: No diff, stacks are unchanged.
+* *FINALIZE stage*: `enable: true` triggers the module, applying the deny policy to all LZA-managed stacks.
+
+End of Run 2: protection restored.
+
+==== Verify
+
+* Confirm the resource was updated successfully in the AWS CloudFormation console
+* Validate connectivity and functionality (e.g., network reachability, DNS resolution)
+* Verify the stack policy is restored: `aws cloudformation get-stack-policy --stack-name <stack-name>`
+
+[IMPORTANT]
+====
+All protected resources are unprotected between Run 1 and Run 2. Minimize this window and avoid unrelated deployments during this period.
+====
+
+=== Procedure: Adding a New Protected Resource Type
+
+To protect additional CloudFormation resource types:
+
+==== Step 1: Identify the CloudFormation Resource Type
+
+Find the exact CloudFormation resource type string. Examples:
+
+* `AWS::EC2::EIP` — Elastic IP addresses
+* `AWS::KMS::Key` — KMS encryption keys
+* `AWS::S3::Bucket` — S3 buckets
+* `AWS::IAM::Role` — IAM roles
+
+Refer to the link:https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html[AWS CloudFormation Resource Type Reference] for the full list.
+
+==== Step 2: Add to Configuration
+
+Add the resource type to the `protectedTypes` list in `global-config.yaml`, maintaining alphabetical order:
+
+[source,yaml]
+----
+stackPolicy:
+  enable: true
+  protectedTypes:
+    - "AWS::EC2::EIP"          # <-- new entry
+    - "AWS::EC2::FlowLog"
+    - "AWS::EC2::InternetGateway"
+    # ... remaining types
+----
+
+==== Step 3: Deploy
+
+Run the LZA pipeline. The updated stack policy will be applied to all LZA-managed stacks.
+
+=== Procedure: Removing a Protected Resource Type
+
+To stop protecting a resource type, remove it from the `protectedTypes` list and deploy. The resource will no longer be protected from replacement or deletion during future stack updates.
+
+=== Verifying Stack Policy Status
+
+To confirm the stack policy is applied to a specific stack:
+
+==== Using AWS Console
+
+. Open the AWS CloudFormation console
+. Select the LZA-managed stack
+. Choose the *Stack policy* tab
+. Verify the policy JSON shows `Deny` for `Update:Replace` and `Update:Delete` on your protected types
+
+==== Using AWS CLI
+
+[source,bash]
+----
+aws cloudformation get-stack-policy --stack-name <stack-name> --region <region>
+----
+
+The output should contain a policy document with deny statements for the protected resource types.
+
+=== Troubleshooting
+
+==== Pipeline Fails with "Action denied by stack policy"
+
+*Cause*: The stack update is attempting to replace or delete a protected resource.
+
+*Resolution*: Follow the procedure above — disable the policy and make your change in Run 1, then re-enable in Run 2.
+
+==== Protected Resource Was Modified Directly (Outside CloudFormation)
+
+*Cause*: Stack policies only protect during CloudFormation updates. Direct API/CLI/Console changes bypass stack policies.
+
+*Resolution*: Use SCPs to prevent direct modifications. Stack policies and SCPs work together — SCPs control identity-level access, stack policies control CloudFormation-level operations.
+
+==== Stack Policy Not Applied After Deployment
+
+*Cause*: The `enable` flag may be set to `false`, or the pipeline did not complete successfully.
+
+*Resolution*: Verify `stackPolicy.enable: true` in `global-config.yaml` and confirm the pipeline completed without errors. Use the CLI verification command above to check the policy on individual stacks.
+
+=== Best Practices
+
+* *Minimize the window*: Keep stack policies disabled for the shortest time possible. Disable, deploy, re-enable, and deploy in the same change window.
+* *Change management*: Document why the policy was disabled and what resource was modified. Include this in your commit message.
+* *Test first*: When making changes that affect protected resources, deploy to a non-production environment first to validate the change before applying to production.
+* *Review before adding types*: Only protect resource types where replacement or deletion would cause significant operational impact. Over-protecting can slow down routine operations.
+* *Keep alphabetical order*: Maintain the `protectedTypes` list in alphabetical order for readability and to avoid duplicates.
