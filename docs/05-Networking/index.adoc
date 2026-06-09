@@ -533,6 +533,20 @@ NOTE: The Network account owns the DNS Firewall rule groups and accesses them di
 *Cost Impact*::
 Route 53 Resolver DNS Firewall charges https://aws.amazon.com/route53/pricing/[$0.60 per million DNS queries processed] for the first billion queries, and $0.40 per million thereafter. There is no charge for the rule group itself or for using AWS-managed domain lists. For a typical workload VPC generating 1–5 million DNS queries per month, the cost is under $3/month per VPC. This applies to all DNS queries originating from within the VPC, regardless of whether they match a rule.
 
+=== DNS Query Logging
+
+https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resolver-query-logs.html[Route 53 Resolver Query Logging] captures DNS queries originating from all VPCs in the environment. This provides visibility into DNS activity for security monitoring, threat detection, and incident response.
+
+The Universal Configuration enables query logging across all VPCs by:
+
+* Creating a centralized query logging configuration shared via RAM to all accounts and OUs
+* Explicitly associating each VPC with the query logging configuration
+* Sending logs to CloudWatch Logs, which are then replicated to the centralized S3 bucket via dynamic partitioning
+
+Query logs are stored in the centralized S3 bucket under the `route53-resolver-query-logs/` prefix.
+
+NOTE: The query logging configuration follows the same sharing pattern as DNS Firewall rule groups. The Network account (delegated admin) owns the configuration and shares it with all workload OUs and the Perimeter and SharedServices accounts.
+
 == Hub and Spoke Architecture (Default)
 
 https://docs.aws.amazon.com/vpc/latest/tgw/transit-gateway-centralized-router.html[Hub and Spoke] is a network design pattern where all network traffic flows through a central point (the hub) before reaching its destination. In AWS, this pattern is typically implemented using Transit Gateway as the hub, with VPCs connected to it as spokes.

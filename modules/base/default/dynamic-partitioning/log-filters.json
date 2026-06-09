@@ -19,8 +19,18 @@
     "logGroupPattern": "AWSAccelerator-*FlowLogsGroup*",
     "s3Prefix": "vpc-flow-logs"
   },
-  { "logGroupPattern": "/aws/lambda/*", "s3Prefix": "lambda" },
-  { "logGroupPattern": "/aws/codebuild/*", "s3Prefix": "codebuild" },
+  {
+    "logGroupPattern": "AWSAccelerator-*QueryLogsLogGroup*",
+    "s3Prefix": "route53-resolver-query-logs"
+  },
+  {
+    "logGroupPattern": "/aws/lambda/*",
+    "s3Prefix": "lambda"
+  },
+  {
+    "logGroupPattern": "/aws/codebuild/*",
+    "s3Prefix": "codebuild"
+  },
   {
     "logGroupPattern": "StackSet-AWSControlTowerBP*",
     "s3Prefix": "AWSControlTowerBP"

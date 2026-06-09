@@ -85,6 +85,7 @@ function applySubstitutions(text, region, regionToken) {
     .split("\n")
     .map(line => {
       if (line.includes("-ipam-global-pool")) return line;
+      if (line.includes("-query-logs")) return line;
       let out = line;
       for (const [pattern, replacement] of substitutions) {
         out = out.replace(pattern, replacement);

@@ -225,8 +225,23 @@ centralNetworkServices:
           # Add additional accounts/Organizational units (OUs) only if broader sharing is required
           accounts: []
 
-  # Route 53 Resolver DNS Firewall
+  # Amazon Route 53 Resolver
   route53Resolver:
+    # Route 53 Resolver Query Logging
+    queryLogs:
+      name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-query-logs"
+      destinations:
+        - cloud-watch-logs # Using Log Streaming, CloudWatch Logs are stored in centralized S3
+      shareTargets:
+        accounts:
+          - SharedServices
+          - Perimeter
+        organizationalUnits:
+          - Infrastructure
+          - Workloads/Dev
+          - Workloads/Test
+          - Workloads/Prod
+    # Route 53 Resolver DNS Firewall
     firewallRuleGroups:
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall"
         regions:
@@ -288,6 +303,8 @@ vpcs:
     enableDnsHostnames: true
     enableDnsSupport: true
     instanceTenancy: default
+    queryLogs:
+      - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-query-logs"
     routeTables:
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-endpoints-rt-a"
         routes:
@@ -413,6 +430,8 @@ vpcs:
     enableDnsHostnames: true
     enableDnsSupport: true
     instanceTenancy: default
+    queryLogs:
+      - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-query-logs"
     routeTables:
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-ingress-rt-fw-a"
         routes: []
@@ -532,6 +551,8 @@ vpcs:
     enableDnsHostnames: true
     enableDnsSupport: true
     instanceTenancy: default
+    queryLogs:
+      - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-query-logs"
     routeTables:
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-egress-rt-fw-a"
         routes: []
@@ -659,6 +680,8 @@ vpcs:
     enableDnsHostnames: true
     enableDnsSupport: true
     instanceTenancy: default
+    queryLogs:
+      - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-query-logs"
     routeTables:
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-inspection-rt-tgw-a"
         routes:
@@ -750,6 +773,8 @@ vpcs:
     enableDnsHostnames: true
     enableDnsSupport: true
     instanceTenancy: default
+    queryLogs:
+      - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-query-logs"
     routeTables:
       - name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-sharedservices-rt-web-a"
         routes:
@@ -886,6 +911,8 @@ vpcs:
     enableDnsHostnames: true
     enableDnsSupport: true
     instanceTenancy: default
+    queryLogs:
+      - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-query-logs"
     routeTables:
       ## Add route tables for subnets shared with accounts
       ### Example Route Table
@@ -974,6 +1001,8 @@ vpcs:
     enableDnsHostnames: true
     enableDnsSupport: true
     instanceTenancy: default
+    queryLogs:
+      - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-query-logs"
     routeTables:
       ## Add route tables for subnets shared with accounts
       ### Example Route Table
@@ -1062,6 +1091,8 @@ vpcs:
     enableDnsHostnames: true
     enableDnsSupport: true
     instanceTenancy: default
+    queryLogs:
+      - "{{ AcceleratorPrefix }}-{{ HomeRegion }}-query-logs"
     routeTables:
       ## Add route tables for subnets shared with accounts
       ### Example Route Table

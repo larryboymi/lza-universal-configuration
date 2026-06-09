@@ -44,6 +44,7 @@ The Universal Configuration implements custom prefixes for logs from specific AW
 |AWSAccelerator-*FirewallAlertLogGroup* |network-firewall/alert
 |AWSAccelerator-*FirewallFlowLogGroup* |network-firewall/flow
 |AWSAccelerator-*FlowLogsGroup* |vpc-flow-logs
+|AWSAccelerator-*QueryLogsLogGroup* |route53-resolver-query-logs
 |/aws/lambda/* |lambda
 |/aws/codebuild/* |codebuild
 |StackSet-AWSControlTowerBP* |AWSControlTowerBP
@@ -210,6 +211,29 @@ These logs are then automatically forwarded to the centralized S3 bucket through
 
 * Network Firewall Alert Logs: `network-firewall/alert`
 * Network Firewall Flow Logs: `network-firewall/flow`
+
+=== Route 53 Resolver Query Logs
+
+Route 53 Resolver Query Logging captures DNS queries originating from all VPCs in the environment. This provides visibility into DNS activity for security monitoring, threat detection, and compliance. The Universal Configuration enables query logging across all VPCs and centralizes the logs through CloudWatch Logs replication.
+
+[yaml]
+----
+queryLogs:
+  name: "{{ AcceleratorPrefix }}-{{ HomeRegion }}-query-logs"
+  destinations:
+    - cloud-watch-logs
+  shareTargets:
+    accounts:
+      - SharedServices
+      - Perimeter
+    organizationalUnits:
+      - Infrastructure
+      - Workloads/Dev
+      - Workloads/Test
+      - Workloads/Prod
+----
+
+Query logs are configured to send to CloudWatch Logs and are automatically forwarded to the centralized S3 bucket with the prefix `route53-resolver-query-logs/`. The query logging configuration is shared via RAM to all workload OUs, Infrastructure, SharedServices, and Perimeter accounts. Each VPC explicitly associates with the query logging configuration to ensure complete coverage.
 
 === Load Balancer and Access Logs
 
