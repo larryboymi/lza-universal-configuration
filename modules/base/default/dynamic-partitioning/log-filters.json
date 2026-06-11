@@ -24,6 +24,10 @@
     "s3Prefix": "route53-resolver-query-logs"
   },
   {
+    "logGroupPattern": "/aws/transitgateway/*",
+    "s3Prefix": "tgw-flow-logs"
+  },
+  {
     "logGroupPattern": "/aws/lambda/*",
     "s3Prefix": "lambda"
   },

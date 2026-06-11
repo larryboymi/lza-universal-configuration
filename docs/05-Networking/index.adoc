@@ -547,6 +547,16 @@ Query logs are stored in the centralized S3 bucket under the `route53-resolver-q
 
 NOTE: The query logging configuration follows the same sharing pattern as DNS Firewall rule groups. The Network account (delegated admin) owns the configuration and shares it with all workload OUs and the Perimeter and SharedServices accounts.
 
+=== Transit Gateway Flow Logs
+
+https://docs.aws.amazon.com/vpc/latest/tgw/tgw-flow-logs.html[Transit Gateway Flow Logs] capture IP traffic going to and from transit gateways. VPC flow logs only capture per-interface traffic; transit gateway flow logs show the cross-VPC and cross-account traffic traversing the hub.
+
+The Universal Configuration enables transit gateway flow logs with:
+
+* `maxAggregationInterval: 60` (the only supported value for transit gateways)
+* Custom format with fields for TGW attachment identification, cross-account VPC tracking, packet loss metrics, and AWS service identification
+* CloudWatch Logs destination, replicated to the centralized S3 bucket under the `tgw-flow-logs/` prefix
+
 == Hub and Spoke Architecture (Default)
 
 https://docs.aws.amazon.com/vpc/latest/tgw/transit-gateway-centralized-router.html[Hub and Spoke] is a network design pattern where all network traffic flows through a central point (the hub) before reaching its destination. In AWS, this pattern is typically implemented using Transit Gateway as the hub, with VPCs connected to it as spokes.

@@ -45,6 +45,7 @@ The Universal Configuration implements custom prefixes for logs from specific AW
 |AWSAccelerator-*FirewallFlowLogGroup* |network-firewall/flow
 |AWSAccelerator-*FlowLogsGroup* |vpc-flow-logs
 |AWSAccelerator-*QueryLogsLogGroup* |route53-resolver-query-logs
+|/aws/transitgateway/* |tgw-flow-logs
 |/aws/lambda/* |lambda
 |/aws/codebuild/* |codebuild
 |StackSet-AWSControlTowerBP* |AWSControlTowerBP
@@ -211,6 +212,51 @@ These logs are then automatically forwarded to the centralized S3 bucket through
 
 * Network Firewall Alert Logs: `network-firewall/alert`
 * Network Firewall Flow Logs: `network-firewall/flow`
+
+=== Transit Gateway Flow Logs
+
+Transit Gateway Flow Logs capture IP traffic going to and from transit gateways. VPC flow logs only capture per-interface traffic; transit gateway flow logs show cross-VPC and cross-account traffic traversing the hub.
+
+The Universal Configuration enables transit gateway flow logs with a custom format:
+
+[yaml]
+----
+transitGatewayFlowLogs:
+  maxAggregationInterval: 60
+  destinations:
+    - cloud-watch-logs
+  defaultFormat: false
+  customFields:
+    - version
+    - resource-type
+    - account-id
+    - tgw-id
+    - tgw-attachment-id
+    - tgw-src-vpc-account-id
+    - tgw-dst-vpc-account-id
+    - tgw-src-vpc-id
+    - tgw-dst-vpc-id
+    - srcaddr
+    - dstaddr
+    - srcport
+    - dstport
+    - protocol
+    - packets
+    - bytes
+    - start
+    - end
+    - log-status
+    - type
+    - tcp-flags
+    - region
+    - flow-direction
+    - packets-lost-no-route
+    - packets-lost-blackhole
+    - pkt-src-aws-service
+    - pkt-dst-aws-service
+----
+
+Logs are sent to CloudWatch Logs and forwarded to the centralized S3 bucket with the prefix `tgw-flow-logs/`. `maxAggregationInterval` is 60 seconds, the only supported value for transit gateway flow logs.
 
 === Route 53 Resolver Query Logs
 
