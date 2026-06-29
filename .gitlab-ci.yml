@@ -198,7 +198,7 @@ dev001-us-east-1-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev"
   variables:
     AWS_DEFAULT_REGION: "us-east-1"
     AWS_CREDS_TARGET_ROLE: "${DEV001_US_EAST_1_GITLAB_S3_ROLE}"
@@ -215,7 +215,7 @@ dev001-us-west-2-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev"
   variables:
     AWS_DEFAULT_REGION: "us-west-2"
     AWS_CREDS_TARGET_ROLE: "${DEV001_US_WEST_2_GITLAB_S3_ROLE}"
@@ -232,7 +232,7 @@ dev001-ca-central-1-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev"
   variables:
     AWS_DEFAULT_REGION: "ca-central-1"
     AWS_CREDS_TARGET_ROLE: "${DEV001_CA_CENTRAL_1_GITLAB_S3_ROLE}"
@@ -249,7 +249,7 @@ dev001-ap-southeast-2-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev"
   variables:
     AWS_DEFAULT_REGION: "ap-southeast-2"
     AWS_CREDS_TARGET_ROLE: "${DEV001_AP_SOUTHEAST_2_GITLAB_S3_ROLE}"
@@ -266,7 +266,7 @@ dev001-eu-west-2-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev"
   variables:
     AWS_DEFAULT_REGION: "eu-west-2"
     AWS_CREDS_TARGET_ROLE: "${DEV001_EU_WEST_2_GITLAB_S3_ROLE}"
@@ -283,7 +283,7 @@ dev002-us-east-1-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev"
   variables:
     AWS_DEFAULT_REGION: "us-east-1"
     AWS_CREDS_TARGET_ROLE: "${DEV002_US_EAST_1_GITLAB_S3_ROLE}"
@@ -300,7 +300,7 @@ dev002-us-west-2-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev"
   variables:
     AWS_DEFAULT_REGION: "us-west-2"
     AWS_CREDS_TARGET_ROLE: "${DEV002_US_WEST_2_GITLAB_S3_ROLE}"
@@ -317,7 +317,7 @@ dev002-ca-central-1-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev"
   variables:
     AWS_DEFAULT_REGION: "ca-central-1"
     AWS_CREDS_TARGET_ROLE: "${DEV002_CA_CENTRAL_1_GITLAB_S3_ROLE}"
@@ -334,7 +334,7 @@ dev002-ap-southeast-2-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev"
   variables:
     AWS_DEFAULT_REGION: "ap-southeast-2"
     AWS_CREDS_TARGET_ROLE: "${DEV002_AP_SOUTHEAST_2_GITLAB_S3_ROLE}"
@@ -351,7 +351,7 @@ dev002-eu-west-2-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev"
   variables:
     AWS_DEFAULT_REGION: "eu-west-2"
     AWS_CREDS_TARGET_ROLE: "${DEV002_EU_WEST_2_GITLAB_S3_ROLE}"
@@ -370,7 +370,7 @@ test001-us-east-1-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "test"
+    - if: $CI_COMMIT_BRANCH == "test"
   variables:
     AWS_DEFAULT_REGION: "us-east-1"
     AWS_CREDS_TARGET_ROLE: "${TEST001_US_EAST_1_GITLAB_S3_ROLE}"
@@ -387,7 +387,7 @@ test001-us-west-2-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "test"
+    - if: $CI_COMMIT_BRANCH == "test"
   variables:
     AWS_DEFAULT_REGION: "us-west-2"
     AWS_CREDS_TARGET_ROLE: "${TEST001_US_WEST_2_GITLAB_S3_ROLE}"
@@ -404,7 +404,7 @@ test001-ca-central-1-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "test"
+    - if: $CI_COMMIT_BRANCH == "test"
   variables:
     AWS_DEFAULT_REGION: "ca-central-1"
     AWS_CREDS_TARGET_ROLE: "${TEST001_CA_CENTRAL_1_GITLAB_S3_ROLE}"
@@ -421,7 +421,7 @@ test001-ap-southeast-2-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "test"
+    - if: $CI_COMMIT_BRANCH == "test"
   variables:
     AWS_DEFAULT_REGION: "ap-southeast-2"
     AWS_CREDS_TARGET_ROLE: "${TEST001_AP_SOUTHEAST_2_GITLAB_S3_ROLE}"
@@ -438,7 +438,7 @@ test001-eu-west-2-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "test"
+    - if: $CI_COMMIT_BRANCH == "test"
   variables:
     AWS_DEFAULT_REGION: "eu-west-2"
     AWS_CREDS_TARGET_ROLE: "${TEST001_EU_WEST_2_GITLAB_S3_ROLE}"
@@ -455,7 +455,7 @@ test002-us-east-1-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "test"
+    - if: $CI_COMMIT_BRANCH == "test"
   variables:
     AWS_DEFAULT_REGION: "us-east-1"
     AWS_CREDS_TARGET_ROLE: "${TEST002_US_EAST_1_GITLAB_S3_ROLE}"
@@ -472,7 +472,7 @@ test002-us-west-2-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "test"
+    - if: $CI_COMMIT_BRANCH == "test"
   variables:
     AWS_DEFAULT_REGION: "us-west-2"
     AWS_CREDS_TARGET_ROLE: "${TEST002_US_WEST_2_GITLAB_S3_ROLE}"
@@ -489,7 +489,7 @@ test002-ca-central-1-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "test"
+    - if: $CI_COMMIT_BRANCH == "test"
   variables:
     AWS_DEFAULT_REGION: "ca-central-1"
     AWS_CREDS_TARGET_ROLE: "${TEST002_CA_CENTRAL_1_GITLAB_S3_ROLE}"
@@ -506,7 +506,7 @@ test002-ap-southeast-2-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "test"
+    - if: $CI_COMMIT_BRANCH == "test"
   variables:
     AWS_DEFAULT_REGION: "ap-southeast-2"
     AWS_CREDS_TARGET_ROLE: "${TEST002_AP_SOUTHEAST_2_GITLAB_S3_ROLE}"
@@ -523,7 +523,7 @@ test002-eu-west-2-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "test"
+    - if: $CI_COMMIT_BRANCH == "test"
   variables:
     AWS_DEFAULT_REGION: "eu-west-2"
     AWS_CREDS_TARGET_ROLE: "${TEST002_EU_WEST_2_GITLAB_S3_ROLE}"
@@ -542,7 +542,7 @@ prod001-us-east-1-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "prod"
+    - if: $CI_COMMIT_BRANCH == "prod"
   variables:
     AWS_DEFAULT_REGION: "us-east-1"
     AWS_CREDS_TARGET_ROLE: "${PROD001_US_EAST_1_GITLAB_S3_ROLE}"
@@ -559,7 +559,7 @@ prod001-us-west-2-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "prod"
+    - if: $CI_COMMIT_BRANCH == "prod"
   variables:
     AWS_DEFAULT_REGION: "us-west-2"
     AWS_CREDS_TARGET_ROLE: "${PROD001_US_WEST_2_GITLAB_S3_ROLE}"
@@ -576,7 +576,7 @@ prod001-ca-central-1-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "prod"
+    - if: $CI_COMMIT_BRANCH == "prod"
   variables:
     AWS_DEFAULT_REGION: "ca-central-1"
     AWS_CREDS_TARGET_ROLE: "${PROD001_CA_CENTRAL_1_GITLAB_S3_ROLE}"
@@ -593,7 +593,7 @@ prod001-ap-southeast-2-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "prod"
+    - if: $CI_COMMIT_BRANCH == "prod"
   variables:
     AWS_DEFAULT_REGION: "ap-southeast-2"
     AWS_CREDS_TARGET_ROLE: "${PROD001_AP_SOUTHEAST_2_GITLAB_S3_ROLE}"
@@ -610,7 +610,7 @@ prod001-eu-west-2-default_base_with_hub_and_spoke_network:
   extends: .base_with_hub_and_spoke
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "prod"
+    - if: $CI_COMMIT_BRANCH == "prod"
   variables:
     AWS_DEFAULT_REGION: "eu-west-2"
     AWS_CREDS_TARGET_ROLE: "${PROD001_EU_WEST_2_GITLAB_S3_ROLE}"
@@ -627,7 +627,7 @@ prod002-us-east-1-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "prod"
+    - if: $CI_COMMIT_BRANCH == "prod"
   variables:
     AWS_DEFAULT_REGION: "us-east-1"
     AWS_CREDS_TARGET_ROLE: "${PROD002_US_EAST_1_GITLAB_S3_ROLE}"
@@ -644,7 +644,7 @@ prod002-us-west-2-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "prod"
+    - if: $CI_COMMIT_BRANCH == "prod"
   variables:
     AWS_DEFAULT_REGION: "us-west-2"
     AWS_CREDS_TARGET_ROLE: "${PROD002_US_WEST_2_GITLAB_S3_ROLE}"
@@ -661,7 +661,7 @@ prod002-ca-central-1-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "prod"
+    - if: $CI_COMMIT_BRANCH == "prod"
   variables:
     AWS_DEFAULT_REGION: "ca-central-1"
     AWS_CREDS_TARGET_ROLE: "${PROD002_CA_CENTRAL_1_GITLAB_S3_ROLE}"
@@ -678,7 +678,7 @@ prod002-ap-southeast-2-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "prod"
+    - if: $CI_COMMIT_BRANCH == "prod"
   variables:
     AWS_DEFAULT_REGION: "ap-southeast-2"
     AWS_CREDS_TARGET_ROLE: "${PROD002_AP_SOUTHEAST_2_GITLAB_S3_ROLE}"
@@ -695,7 +695,7 @@ prod002-eu-west-2-default_base_with_shared_vpc_network:
   extends: .base_with_shared_vpc
   stage: deploy
   rules:
-    - if: $CI_PROJECT_ID == "115191" && $CI_COMMIT_BRANCH == "prod"
+    - if: $CI_COMMIT_BRANCH == "prod"
   variables:
     AWS_DEFAULT_REGION: "eu-west-2"
     AWS_CREDS_TARGET_ROLE: "${PROD002_EU_WEST_2_GITLAB_S3_ROLE}"
