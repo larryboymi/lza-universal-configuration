@@ -153,7 +153,7 @@ release:
 # DEV
 # ===========================================================================
 
-dev001-us-east-1-default_base_with_hub_and_spoke_network:
+deploy:dev001:hub-spoke:us-east-1:
   extends: .deploy
   stage: deploy
   rules:
@@ -171,7 +171,7 @@ dev001-us-east-1-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-dev001-us-west-2-default_base_with_hub_and_spoke_network:
+deploy:dev001:hub-spoke:us-west-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -189,7 +189,7 @@ dev001-us-west-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-dev001-ca-central-1-default_base_with_hub_and_spoke_network:
+deploy:dev001:hub-spoke:ca-central-1:
   extends: .deploy
   stage: deploy
   rules:
@@ -207,7 +207,7 @@ dev001-ca-central-1-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-dev001-ap-southeast-2-default_base_with_hub_and_spoke_network:
+deploy:dev001:hub-spoke:ap-southeast-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -225,7 +225,7 @@ dev001-ap-southeast-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-dev001-eu-west-2-default_base_with_hub_and_spoke_network:
+deploy:dev001:hub-spoke:eu-west-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -243,7 +243,7 @@ dev001-eu-west-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-dev002-us-east-1-default_base_with_shared_vpc_network:
+deploy:dev002:shared-vpc:us-east-1:
   extends: .deploy
   stage: deploy
   rules:
@@ -261,7 +261,7 @@ dev002-us-east-1-default_base_with_shared_vpc_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-dev002-us-west-2-default_base_with_shared_vpc_network:
+deploy:dev002:shared-vpc:us-west-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -279,7 +279,7 @@ dev002-us-west-2-default_base_with_shared_vpc_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-dev002-ca-central-1-default_base_with_shared_vpc_network:
+deploy:dev002:shared-vpc:ca-central-1:
   extends: .deploy
   stage: deploy
   rules:
@@ -297,7 +297,7 @@ dev002-ca-central-1-default_base_with_shared_vpc_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-dev002-ap-southeast-2-default_base_with_shared_vpc_network:
+deploy:dev002:shared-vpc:ap-southeast-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -315,7 +315,7 @@ dev002-ap-southeast-2-default_base_with_shared_vpc_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-dev002-eu-west-2-default_base_with_shared_vpc_network:
+deploy:dev002:shared-vpc:eu-west-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -337,7 +337,7 @@ dev002-eu-west-2-default_base_with_shared_vpc_network:
 # TEST
 # ===========================================================================
 
-test001-us-east-1-default_base_with_hub_and_spoke_network:
+deploy:test001:hub-spoke:us-east-1:
   extends: .deploy
   stage: deploy
   rules:
@@ -355,7 +355,7 @@ test001-us-east-1-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-test001-us-west-2-default_base_with_hub_and_spoke_network:
+deploy:test001:hub-spoke:us-west-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -373,7 +373,7 @@ test001-us-west-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-test001-ca-central-1-default_base_with_hub_and_spoke_network:
+deploy:test001:hub-spoke:ca-central-1:
   extends: .deploy
   stage: deploy
   rules:
@@ -391,7 +391,7 @@ test001-ca-central-1-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-test001-ap-southeast-2-default_base_with_hub_and_spoke_network:
+deploy:test001:hub-spoke:ap-southeast-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -409,7 +409,7 @@ test001-ap-southeast-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-test001-eu-west-2-default_base_with_hub_and_spoke_network:
+deploy:test001:hub-spoke:eu-west-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -427,7 +427,7 @@ test001-eu-west-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-test002-us-east-1-default_base_with_shared_vpc_network:
+deploy:test002:shared-vpc:us-east-1:
   extends: .deploy
   stage: deploy
   rules:
@@ -445,7 +445,7 @@ test002-us-east-1-default_base_with_shared_vpc_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-test002-us-west-2-default_base_with_shared_vpc_network:
+deploy:test002:shared-vpc:us-west-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -463,7 +463,7 @@ test002-us-west-2-default_base_with_shared_vpc_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-test002-ca-central-1-default_base_with_shared_vpc_network:
+deploy:test002:shared-vpc:ca-central-1:
   extends: .deploy
   stage: deploy
   rules:
@@ -481,7 +481,7 @@ test002-ca-central-1-default_base_with_shared_vpc_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-test002-ap-southeast-2-default_base_with_shared_vpc_network:
+deploy:test002:shared-vpc:ap-southeast-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -499,7 +499,7 @@ test002-ap-southeast-2-default_base_with_shared_vpc_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-test002-eu-west-2-default_base_with_shared_vpc_network:
+deploy:test002:shared-vpc:eu-west-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -521,7 +521,7 @@ test002-eu-west-2-default_base_with_shared_vpc_network:
 # PROD
 # ===========================================================================
 
-prod001-us-east-1-default_base_with_hub_and_spoke_network:
+deploy:prod001:hub-spoke:us-east-1:
   extends: .deploy
   stage: deploy
   rules:
@@ -539,7 +539,7 @@ prod001-us-east-1-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-prod001-us-west-2-default_base_with_hub_and_spoke_network:
+deploy:prod001:hub-spoke:us-west-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -557,7 +557,7 @@ prod001-us-west-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-prod001-ca-central-1-default_base_with_hub_and_spoke_network:
+deploy:prod001:hub-spoke:ca-central-1:
   extends: .deploy
   stage: deploy
   rules:
@@ -575,7 +575,7 @@ prod001-ca-central-1-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-prod001-ap-southeast-2-default_base_with_hub_and_spoke_network:
+deploy:prod001:hub-spoke:ap-southeast-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -593,7 +593,7 @@ prod001-ap-southeast-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-prod001-eu-west-2-default_base_with_hub_and_spoke_network:
+deploy:prod001:hub-spoke:eu-west-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -611,7 +611,7 @@ prod001-eu-west-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-prod002-us-east-1-default_base_with_shared_vpc_network:
+deploy:prod002:shared-vpc:us-east-1:
   extends: .deploy
   stage: deploy
   rules:
@@ -629,7 +629,7 @@ prod002-us-east-1-default_base_with_shared_vpc_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-prod002-us-west-2-default_base_with_shared_vpc_network:
+deploy:prod002:shared-vpc:us-west-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -647,7 +647,7 @@ prod002-us-west-2-default_base_with_shared_vpc_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-prod002-ca-central-1-default_base_with_shared_vpc_network:
+deploy:prod002:shared-vpc:ca-central-1:
   extends: .deploy
   stage: deploy
   rules:
@@ -665,7 +665,7 @@ prod002-ca-central-1-default_base_with_shared_vpc_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-prod002-ap-southeast-2-default_base_with_shared_vpc_network:
+deploy:prod002:shared-vpc:ap-southeast-2:
   extends: .deploy
   stage: deploy
   rules:
@@ -683,7 +683,7 @@ prod002-ap-southeast-2-default_base_with_shared_vpc_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
-prod002-eu-west-2-default_base_with_shared_vpc_network:
+deploy:prod002:shared-vpc:eu-west-2:
   extends: .deploy
   stage: deploy
   rules:
