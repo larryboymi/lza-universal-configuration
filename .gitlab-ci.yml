@@ -59,7 +59,16 @@ release:
         - name: $DEFAULT_AWS_GOVCLOUD_US
           url: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-universal-config/${CI_COMMIT_TAG}/${DEFAULT_AWS_GOVCLOUD_US}
 
-.base_with_hub_and_spoke:
+# ===========================================================================
+# DEPLOY TEMPLATE
+# ===========================================================================
+# Single parameterized template replacing .base_with_hub_and_spoke and
+# .base_with_shared_vpc. The NETWORK_TYPE variable controls which network
+# module is assembled and which multi-region script is executed.
+#
+# NETWORK_TYPE values: "hub-and-spoke" or "shared-vpc"
+
+.deploy:
   before_script:
     - apt-get update -yq
   script:
@@ -67,11 +76,26 @@ release:
     - cd modules
     - mkdir temp
     - cp -r base/default/* temp/
-    - cp -r network/hub-and-spoke/* temp/
+    - |
+      if [ -z "$NETWORK_TYPE" ]; then
+        echo "Error: NETWORK_TYPE variable is not set" && exit 1
+      fi
+      if [ ! -d "network/${NETWORK_TYPE}" ]; then
+        echo "Error: Network type directory 'network/${NETWORK_TYPE}' does not exist" && exit 1
+      fi
+      cp -r "network/${NETWORK_TYPE}/"* temp/
     - cd ../scripts
     - npm install
     - node index.js ../modules/temp/
-    - node hub-spoke-multi-region.js ../modules/temp/
+    - |
+      if [ "$NETWORK_TYPE" = "hub-and-spoke" ]; then
+        node hub-spoke-multi-region.js ../modules/temp/
+      elif [ "$NETWORK_TYPE" = "shared-vpc" ]; then
+        node shared-vpc-testing.js ../modules/temp/
+        node shared-vpc-multi-region.js ../modules/temp/
+      else
+        echo "Error: Invalid NETWORK_TYPE '$NETWORK_TYPE'. Must be 'hub-and-spoke' or 'shared-vpc'" && exit 1
+      fi
     - node validate-network-config.js ../modules/temp/
     - cd ../modules/temp
     - zip -r ../../aws-accelerator-config.zip . &>/dev/null
@@ -125,81 +149,17 @@ release:
       - aws-accelerator-config.zip
     expire_in: 1 week
 
-.base_with_shared_vpc:
-  before_script:
-    - apt-get update -yq
-  script:
-    - apt-get install nodejs npm -yq
-    - cd modules
-    - mkdir temp
-    - cp -r base/default/* temp/
-    - cp -r network/shared-vpc/* temp/
-    - cd ../scripts
-    - npm install
-    - node index.js ../modules/temp/
-    - node shared-vpc-testing.js ../modules/temp/
-    - node shared-vpc-multi-region.js ../modules/temp/
-    - node validate-network-config.js ../modules/temp/
-    - cd ../modules/temp
-    - zip -r ../../aws-accelerator-config.zip . &>/dev/null
-    - cd ../..
-    # Get local file size
-    - LOCAL_SIZE=$(stat -c%s aws-accelerator-config.zip)
-    - echo "Uploading ${LOCAL_SIZE} bytes to ${CONFIG_BUCKET_NAME}"
-    # Upload file
-    - aws s3 cp aws-accelerator-config.zip s3://${CONFIG_BUCKET_NAME}/zipped/aws-accelerator-config.zip
-    # Verify upload
-    - |
-      echo "Verifying upload..."
-      S3_SIZE=$(aws s3api head-object --bucket ${CONFIG_BUCKET_NAME} --key zipped/aws-accelerator-config.zip --query 'ContentLength' --output text)
-      echo "Local: ${LOCAL_SIZE} bytes, S3: ${S3_SIZE} bytes"
-      if [ "$LOCAL_SIZE" != "$S3_SIZE" ]; then echo "Upload failed - size mismatch" && exit 1; fi
-      echo "Upload verified successfully"
-    # Start CodePipeline
-    - |
-      if [ "$AWS_DEFAULT_REGION" = "$HOME_REGION" ]; then
-        PIPELINE_NAME="AWSAccelerator-Pipeline"
-        echo "Starting pipeline: ${PIPELINE_NAME} in home region: $HOME_REGION"
-        if EXECUTION_ID=$(aws codepipeline start-pipeline-execution --name ${PIPELINE_NAME} --query 'pipelineExecutionId' --output text 2>/dev/null); then
-          echo "Pipeline execution started: $EXECUTION_ID"
-          while true; do
-            if STATUS=$(aws codepipeline get-pipeline-execution --pipeline-name ${PIPELINE_NAME} --pipeline-execution-id $EXECUTION_ID --query 'pipelineExecution.status' --output text 2>/dev/null); then
-              echo "Pipeline status: $STATUS"
-              case $STATUS in
-                "Succeeded") echo "Pipeline completed successfully" && break ;;
-                "Failed"|"Cancelled"|"Stopped") echo "Pipeline failed: $STATUS" && exit 1 ;;
-                "InProgress") sleep 60 ;;
-                *) echo "Unknown status: $STATUS" && exit 1 ;;
-              esac
-            else
-              STATUS=$(aws codepipeline list-pipeline-executions --pipeline-name ${PIPELINE_NAME} --max-items 1 --query 'pipelineExecutionSummaries[0].status' --output text 2>/dev/null)
-              echo "Recent status: $STATUS"
-              case $STATUS in
-                "Succeeded") echo "Pipeline completed successfully" && break ;;
-                "Failed"|"Cancelled"|"Stopped") echo "Pipeline failed: $STATUS" && exit 1 ;;
-                *) sleep 60 ;;
-              esac
-            fi
-          done
-        else
-          echo "Failed to start pipeline in home region" && exit 1
-        fi
-      else
-        echo "Skipping pipeline - not home region (current: $AWS_DEFAULT_REGION, home: $HOME_REGION)"
-      fi
-  artifacts:
-    paths:
-      - aws-accelerator-config.zip
-    expire_in: 1 week
-
+# ===========================================================================
 # DEV
+# ===========================================================================
 
 dev001-us-east-1-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "us-east-1"
     AWS_CREDS_TARGET_ROLE: "${DEV001_US_EAST_1_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${DEV001_US_EAST_1_CONFIG_BUCKET_NAME}"
@@ -212,11 +172,12 @@ dev001-us-east-1-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 dev001-us-west-2-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "us-west-2"
     AWS_CREDS_TARGET_ROLE: "${DEV001_US_WEST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${DEV001_US_WEST_2_CONFIG_BUCKET_NAME}"
@@ -229,11 +190,12 @@ dev001-us-west-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 dev001-ca-central-1-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "ca-central-1"
     AWS_CREDS_TARGET_ROLE: "${DEV001_CA_CENTRAL_1_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${DEV001_CA_CENTRAL_1_CONFIG_BUCKET_NAME}"
@@ -246,11 +208,12 @@ dev001-ca-central-1-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 dev001-ap-southeast-2-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "ap-southeast-2"
     AWS_CREDS_TARGET_ROLE: "${DEV001_AP_SOUTHEAST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${DEV001_AP_SOUTHEAST_2_CONFIG_BUCKET_NAME}"
@@ -263,11 +226,12 @@ dev001-ap-southeast-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 dev001-eu-west-2-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "eu-west-2"
     AWS_CREDS_TARGET_ROLE: "${DEV001_EU_WEST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${DEV001_EU_WEST_2_CONFIG_BUCKET_NAME}"
@@ -280,11 +244,12 @@ dev001-eu-west-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 dev002-us-east-1-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "us-east-1"
     AWS_CREDS_TARGET_ROLE: "${DEV002_US_EAST_1_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${DEV002_US_EAST_1_CONFIG_BUCKET_NAME}"
@@ -297,11 +262,12 @@ dev002-us-east-1-default_base_with_shared_vpc_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 dev002-us-west-2-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "us-west-2"
     AWS_CREDS_TARGET_ROLE: "${DEV002_US_WEST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${DEV002_US_WEST_2_CONFIG_BUCKET_NAME}"
@@ -314,11 +280,12 @@ dev002-us-west-2-default_base_with_shared_vpc_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 dev002-ca-central-1-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "ca-central-1"
     AWS_CREDS_TARGET_ROLE: "${DEV002_CA_CENTRAL_1_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${DEV002_CA_CENTRAL_1_CONFIG_BUCKET_NAME}"
@@ -331,11 +298,12 @@ dev002-ca-central-1-default_base_with_shared_vpc_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 dev002-ap-southeast-2-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "ap-southeast-2"
     AWS_CREDS_TARGET_ROLE: "${DEV002_AP_SOUTHEAST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${DEV002_AP_SOUTHEAST_2_CONFIG_BUCKET_NAME}"
@@ -348,11 +316,12 @@ dev002-ap-southeast-2-default_base_with_shared_vpc_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 dev002-eu-west-2-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "eu-west-2"
     AWS_CREDS_TARGET_ROLE: "${DEV002_EU_WEST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${DEV002_EU_WEST_2_CONFIG_BUCKET_NAME}"
@@ -364,14 +333,17 @@ dev002-eu-west-2-default_base_with_shared_vpc_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
+# ===========================================================================
 # TEST
+# ===========================================================================
 
 test001-us-east-1-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "us-east-1"
     AWS_CREDS_TARGET_ROLE: "${TEST001_US_EAST_1_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${TEST001_US_EAST_1_CONFIG_BUCKET_NAME}"
@@ -384,11 +356,12 @@ test001-us-east-1-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 test001-us-west-2-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "us-west-2"
     AWS_CREDS_TARGET_ROLE: "${TEST001_US_WEST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${TEST001_US_WEST_2_CONFIG_BUCKET_NAME}"
@@ -401,11 +374,12 @@ test001-us-west-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 test001-ca-central-1-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "ca-central-1"
     AWS_CREDS_TARGET_ROLE: "${TEST001_CA_CENTRAL_1_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${TEST001_CA_CENTRAL_1_CONFIG_BUCKET_NAME}"
@@ -418,11 +392,12 @@ test001-ca-central-1-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 test001-ap-southeast-2-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "ap-southeast-2"
     AWS_CREDS_TARGET_ROLE: "${TEST001_AP_SOUTHEAST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${TEST001_AP_SOUTHEAST_2_CONFIG_BUCKET_NAME}"
@@ -435,11 +410,12 @@ test001-ap-southeast-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 test001-eu-west-2-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "eu-west-2"
     AWS_CREDS_TARGET_ROLE: "${TEST001_EU_WEST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${TEST001_EU_WEST_2_CONFIG_BUCKET_NAME}"
@@ -452,11 +428,12 @@ test001-eu-west-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 test002-us-east-1-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "us-east-1"
     AWS_CREDS_TARGET_ROLE: "${TEST002_US_EAST_1_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${TEST002_US_EAST_1_CONFIG_BUCKET_NAME}"
@@ -469,11 +446,12 @@ test002-us-east-1-default_base_with_shared_vpc_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 test002-us-west-2-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "us-west-2"
     AWS_CREDS_TARGET_ROLE: "${TEST002_US_WEST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${TEST002_US_WEST_2_CONFIG_BUCKET_NAME}"
@@ -486,11 +464,12 @@ test002-us-west-2-default_base_with_shared_vpc_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 test002-ca-central-1-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "ca-central-1"
     AWS_CREDS_TARGET_ROLE: "${TEST002_CA_CENTRAL_1_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${TEST002_CA_CENTRAL_1_CONFIG_BUCKET_NAME}"
@@ -503,11 +482,12 @@ test002-ca-central-1-default_base_with_shared_vpc_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 test002-ap-southeast-2-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "ap-southeast-2"
     AWS_CREDS_TARGET_ROLE: "${TEST002_AP_SOUTHEAST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${TEST002_AP_SOUTHEAST_2_CONFIG_BUCKET_NAME}"
@@ -520,11 +500,12 @@ test002-ap-southeast-2-default_base_with_shared_vpc_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 test002-eu-west-2-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "eu-west-2"
     AWS_CREDS_TARGET_ROLE: "${TEST002_EU_WEST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${TEST002_EU_WEST_2_CONFIG_BUCKET_NAME}"
@@ -536,14 +517,17 @@ test002-eu-west-2-default_base_with_shared_vpc_network:
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
+# ===========================================================================
 # PROD
+# ===========================================================================
 
 prod001-us-east-1-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "us-east-1"
     AWS_CREDS_TARGET_ROLE: "${PROD001_US_EAST_1_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${PROD001_US_EAST_1_CONFIG_BUCKET_NAME}"
@@ -556,11 +540,12 @@ prod001-us-east-1-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 prod001-us-west-2-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "us-west-2"
     AWS_CREDS_TARGET_ROLE: "${PROD001_US_WEST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${PROD001_US_WEST_2_CONFIG_BUCKET_NAME}"
@@ -573,11 +558,12 @@ prod001-us-west-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 prod001-ca-central-1-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "ca-central-1"
     AWS_CREDS_TARGET_ROLE: "${PROD001_CA_CENTRAL_1_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${PROD001_CA_CENTRAL_1_CONFIG_BUCKET_NAME}"
@@ -590,11 +576,12 @@ prod001-ca-central-1-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 prod001-ap-southeast-2-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "ap-southeast-2"
     AWS_CREDS_TARGET_ROLE: "${PROD001_AP_SOUTHEAST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${PROD001_AP_SOUTHEAST_2_CONFIG_BUCKET_NAME}"
@@ -607,11 +594,12 @@ prod001-ap-southeast-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 prod001-eu-west-2-default_base_with_hub_and_spoke_network:
-  extends: .base_with_hub_and_spoke
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
+    NETWORK_TYPE: "hub-and-spoke"
     AWS_DEFAULT_REGION: "eu-west-2"
     AWS_CREDS_TARGET_ROLE: "${PROD001_EU_WEST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${PROD001_EU_WEST_2_CONFIG_BUCKET_NAME}"
@@ -624,11 +612,12 @@ prod001-eu-west-2-default_base_with_hub_and_spoke_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 prod002-us-east-1-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "us-east-1"
     AWS_CREDS_TARGET_ROLE: "${PROD002_US_EAST_1_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${PROD002_US_EAST_1_CONFIG_BUCKET_NAME}"
@@ -641,11 +630,12 @@ prod002-us-east-1-default_base_with_shared_vpc_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 prod002-us-west-2-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "us-west-2"
     AWS_CREDS_TARGET_ROLE: "${PROD002_US_WEST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${PROD002_US_WEST_2_CONFIG_BUCKET_NAME}"
@@ -658,11 +648,12 @@ prod002-us-west-2-default_base_with_shared_vpc_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 prod002-ca-central-1-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "ca-central-1"
     AWS_CREDS_TARGET_ROLE: "${PROD002_CA_CENTRAL_1_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${PROD002_CA_CENTRAL_1_CONFIG_BUCKET_NAME}"
@@ -675,11 +666,12 @@ prod002-ca-central-1-default_base_with_shared_vpc_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 prod002-ap-southeast-2-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "ap-southeast-2"
     AWS_CREDS_TARGET_ROLE: "${PROD002_AP_SOUTHEAST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${PROD002_AP_SOUTHEAST_2_CONFIG_BUCKET_NAME}"
@@ -692,11 +684,12 @@ prod002-ap-southeast-2-default_base_with_shared_vpc_network:
     WORKLOAD_SANDBOX_ACCOUNTS: 1
 
 prod002-eu-west-2-default_base_with_shared_vpc_network:
-  extends: .base_with_shared_vpc
+  extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
+    NETWORK_TYPE: "shared-vpc"
     AWS_DEFAULT_REGION: "eu-west-2"
     AWS_CREDS_TARGET_ROLE: "${PROD002_EU_WEST_2_GITLAB_S3_ROLE}"
     CONFIG_BUCKET_NAME: "${PROD002_EU_WEST_2_CONFIG_BUCKET_NAME}"
