@@ -4,6 +4,7 @@ stages:
   - validate
   - deploy-wave-1
   - deploy-wave-2
+  - promote
   - release
 
 workflow:
@@ -722,3 +723,72 @@ deploy:prod002:shared-vpc:eu-west-2:
     WORKLOAD_TEST_ACCOUNTS: 1
     WORKLOAD_PROD_ACCOUNTS: 1
     WORKLOAD_SANDBOX_ACCOUNTS: 1
+
+# ===========================================================================
+# PROMOTE (manual gates for branch-to-branch promotion)
+# ===========================================================================
+# After all deploys succeed in a branch, a maintainer clicks "play" to
+# promote the code to the next branch. This triggers the next branch's
+# pipeline automatically.
+#
+# Flow: dev → test → prod → main
+# All promote jobs require manual approval (when: manual).
+
+.promote:
+  stage: promote
+  image: public.ecr.aws/docker/library/alpine:3.22
+  before_script:
+    - apk add --no-cache git curl jq
+  script:
+    - |
+      git config user.email "${GITLAB_USER_EMAIL}"
+      git config user.name "${GITLAB_USER_NAME}"
+      git config --local credential.helper "!f() { echo username=oauth2; echo password=${PROMOTE_TOKEN}; }; f"
+      git remote set-url origin "https://${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+      git fetch origin "${TARGET_BRANCH}"
+      git checkout "${TARGET_BRANCH}"
+
+      # Attempt merge; on conflict, create MR instead of failing
+      if git merge "origin/${CI_COMMIT_BRANCH}" --no-edit -m "chore(promote): ${CI_COMMIT_BRANCH} → ${TARGET_BRANCH} [skip ci]"; then
+        git push origin "${TARGET_BRANCH}"
+        echo "Promoted ${CI_COMMIT_BRANCH} → ${TARGET_BRANCH}"
+      else
+        echo "WARN: Merge conflict detected. Creating MR instead."
+        git merge --abort
+        git push origin "${CI_COMMIT_BRANCH}:refs/heads/${CI_COMMIT_BRANCH}" || true
+        MR_TITLE="chore(promote): merge ${CI_COMMIT_BRANCH} → ${TARGET_BRANCH} (conflict)"
+        curl --fail --silent --request POST \
+          --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+          --header "Content-Type: application/json" \
+          --data "{\"source_branch\":\"${CI_COMMIT_BRANCH}\",\"target_branch\":\"${TARGET_BRANCH}\",\"title\":\"${MR_TITLE}\",\"remove_source_branch\":false}" \
+          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests" | jq '.web_url'
+        echo "MR created. Manual resolution required."
+        exit 1
+      fi
+
+promote:dev-to-test:
+  extends: .promote
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+      when: manual
+  allow_failure: false
+  variables:
+    TARGET_BRANCH: "test"
+
+promote:test-to-prod:
+  extends: .promote
+  rules:
+    - if: $CI_COMMIT_BRANCH == "test"
+      when: manual
+  allow_failure: false
+  variables:
+    TARGET_BRANCH: "prod"
+
+promote:prod-to-main:
+  extends: .promote
+  rules:
+    - if: $CI_COMMIT_BRANCH == "prod"
+      when: manual
+  allow_failure: false
+  variables:
+    TARGET_BRANCH: "main"
