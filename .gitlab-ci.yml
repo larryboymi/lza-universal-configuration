@@ -2,7 +2,8 @@ image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
 
 stages:
   - validate
-  - deploy
+  - deploy-wave-1
+  - deploy-wave-2
   - release
 
 workflow:
@@ -176,7 +177,7 @@ release:
 
 deploy:dev001:hub-spoke:us-east-1:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-1
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
@@ -194,7 +195,7 @@ deploy:dev001:hub-spoke:us-east-1:
 
 deploy:dev001:hub-spoke:us-west-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
@@ -212,7 +213,7 @@ deploy:dev001:hub-spoke:us-west-2:
 
 deploy:dev001:hub-spoke:ca-central-1:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
@@ -230,7 +231,7 @@ deploy:dev001:hub-spoke:ca-central-1:
 
 deploy:dev001:hub-spoke:ap-southeast-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
@@ -248,7 +249,7 @@ deploy:dev001:hub-spoke:ap-southeast-2:
 
 deploy:dev001:hub-spoke:eu-west-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
@@ -266,7 +267,7 @@ deploy:dev001:hub-spoke:eu-west-2:
 
 deploy:dev002:shared-vpc:us-east-1:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-1
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
@@ -284,7 +285,7 @@ deploy:dev002:shared-vpc:us-east-1:
 
 deploy:dev002:shared-vpc:us-west-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
@@ -302,7 +303,7 @@ deploy:dev002:shared-vpc:us-west-2:
 
 deploy:dev002:shared-vpc:ca-central-1:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
@@ -320,7 +321,7 @@ deploy:dev002:shared-vpc:ca-central-1:
 
 deploy:dev002:shared-vpc:ap-southeast-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
@@ -338,7 +339,7 @@ deploy:dev002:shared-vpc:ap-southeast-2:
 
 deploy:dev002:shared-vpc:eu-west-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
@@ -360,7 +361,7 @@ deploy:dev002:shared-vpc:eu-west-2:
 
 deploy:test001:hub-spoke:us-east-1:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
@@ -378,7 +379,7 @@ deploy:test001:hub-spoke:us-east-1:
 
 deploy:test001:hub-spoke:us-west-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
@@ -396,7 +397,7 @@ deploy:test001:hub-spoke:us-west-2:
 
 deploy:test001:hub-spoke:ca-central-1:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
@@ -414,7 +415,7 @@ deploy:test001:hub-spoke:ca-central-1:
 
 deploy:test001:hub-spoke:ap-southeast-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
@@ -432,7 +433,7 @@ deploy:test001:hub-spoke:ap-southeast-2:
 
 deploy:test001:hub-spoke:eu-west-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
@@ -450,7 +451,7 @@ deploy:test001:hub-spoke:eu-west-2:
 
 deploy:test002:shared-vpc:us-east-1:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
@@ -468,7 +469,7 @@ deploy:test002:shared-vpc:us-east-1:
 
 deploy:test002:shared-vpc:us-west-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
@@ -486,7 +487,7 @@ deploy:test002:shared-vpc:us-west-2:
 
 deploy:test002:shared-vpc:ca-central-1:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
@@ -504,7 +505,7 @@ deploy:test002:shared-vpc:ca-central-1:
 
 deploy:test002:shared-vpc:ap-southeast-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
@@ -522,7 +523,7 @@ deploy:test002:shared-vpc:ap-southeast-2:
 
 deploy:test002:shared-vpc:eu-west-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "test"
   variables:
@@ -544,7 +545,7 @@ deploy:test002:shared-vpc:eu-west-2:
 
 deploy:prod001:hub-spoke:us-east-1:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
@@ -562,7 +563,7 @@ deploy:prod001:hub-spoke:us-east-1:
 
 deploy:prod001:hub-spoke:us-west-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
@@ -580,7 +581,7 @@ deploy:prod001:hub-spoke:us-west-2:
 
 deploy:prod001:hub-spoke:ca-central-1:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
@@ -598,7 +599,7 @@ deploy:prod001:hub-spoke:ca-central-1:
 
 deploy:prod001:hub-spoke:ap-southeast-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
@@ -616,7 +617,7 @@ deploy:prod001:hub-spoke:ap-southeast-2:
 
 deploy:prod001:hub-spoke:eu-west-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
@@ -634,7 +635,7 @@ deploy:prod001:hub-spoke:eu-west-2:
 
 deploy:prod002:shared-vpc:us-east-1:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
@@ -652,7 +653,7 @@ deploy:prod002:shared-vpc:us-east-1:
 
 deploy:prod002:shared-vpc:us-west-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
@@ -670,7 +671,7 @@ deploy:prod002:shared-vpc:us-west-2:
 
 deploy:prod002:shared-vpc:ca-central-1:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
@@ -688,7 +689,7 @@ deploy:prod002:shared-vpc:ca-central-1:
 
 deploy:prod002:shared-vpc:ap-southeast-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
@@ -706,7 +707,7 @@ deploy:prod002:shared-vpc:ap-southeast-2:
 
 deploy:prod002:shared-vpc:eu-west-2:
   extends: .deploy
-  stage: deploy
+  stage: deploy-wave-2
   rules:
     - if: $CI_COMMIT_BRANCH == "prod"
   variables:
