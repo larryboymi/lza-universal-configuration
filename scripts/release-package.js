@@ -169,6 +169,9 @@ function runCommand(cmd, args, cwd) {
  */
 function uploadFile(filePath, url, token) {
   return new Promise((resolve, reject) => {
+    const fileSize = fs.statSync(filePath).size;
+    console.log(`Uploading ${path.basename(filePath)} (${(fileSize / 1024 / 1024).toFixed(2)} MB) to ${url}`);
+    const startTime = Date.now();
     const parsedUrl = new URL(url);
     const fileStream = fs.createReadStream(filePath);
     const options = {
@@ -178,15 +181,30 @@ function uploadFile(filePath, url, token) {
       method: "PUT",
       headers: {
         "JOB-TOKEN": token,
-        "Content-Length": fs.statSync(filePath).size,
+        "Content-Length": fileSize,
       },
     };
     const req = https.request(options, (res) => {
-      res.statusCode < 400
-        ? resolve()
-        : reject(new Error(`Upload failed: ${res.statusCode}`));
+      let body = '';
+      res.on('data', (chunk) => { body += chunk; });
+      res.on('error', (err) => {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        reject(new Error(`Response stream error after ${elapsed}s: ${err.message}`));
+      });
+      res.on('end', () => {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        if (res.statusCode < 400) {
+          console.log(`Upload complete: HTTP ${res.statusCode} (${elapsed}s)`);
+          resolve();
+        } else {
+          reject(new Error(`Upload failed: HTTP ${res.statusCode} - ${body} (${elapsed}s)`));
+        }
+      });
     });
-    req.on("error", reject);
+    req.on("error", (err) => {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      reject(new Error(`Upload error after ${elapsed}s: ${err.message}`));
+    });
     fileStream.pipe(req);
   });
 }
