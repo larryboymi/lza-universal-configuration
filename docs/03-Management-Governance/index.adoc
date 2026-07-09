@@ -50,6 +50,12 @@ The Infrastructure OU forms the operational backbone of your AWS environment by 
 
 The Suspended OU creates a secure containment zone for accounts that have been decommissioned or require temporary isolation such as during account provisioning, addressing a critical security gap in AWS account lifecycle management. By implementing a comprehensive DenyAll SCP, this structure prevents all API operations in contained accounts, preserving historical data for compliance while providing maximum protection against unauthorized activity. This approach simplifies account lifecycle management and creates a secure holding area for accounts during security investigations or organizational restructuring.
 
+===== LzaDeployment OU
+
+The LzaDeployment OU houses the dedicated account for container-based LZA deployments. The LZA Universal Config applies specialized SCPs to this OU that protect LZA-managed resources from unauthorized modification and deletion while permitting operators to perform deployment operations.
+
+NOTE: This OU is applicable only to container-based LZA deployments and is added through partition-specific configuration replacements. Standard AWS CodePipeline-based deployments do not use this OU.
+
 ===== Workloads OU
 
 The Workloads OU creates a hierarchical structure for business applications that aligns with the software development lifecycle, establishing clear boundaries between infrastructure and application environments. The LZA Universal Config implements this structure to address the common challenges of inconsistent security controls across development stages and difficulties in implementing progressive governance. By organizing accounts into sub-OUs representing distinct lifecycle phases (Sandbox, Dev, Test, Prod), this design creates a structured progression of security controls that match application maturity while enabling unified governance policies. This approach simplifies account provisioning, facilitates appropriate compliance controls at each stage, and provides clear isolation between environments—all while supporting efficient cost attribution and organizational scaling.
@@ -247,6 +253,14 @@ This account can be further configured to support:
 * License management and software distribution
 
 This centralized services model reduces operational overhead, ensures consistent implementation of critical infrastructure components, and provides a unified approach to managing common services that would otherwise be duplicated across multiple accounts.
+
+===== LzaDeployment Account
+
+The LzaDeployment account hosts the deployment infrastructure for the container deployment method. LZA depends on services like AWS CodeBuild and AWS CodePipeline, which may not be available in all AWS Regions. In these Regions, LZA is deployed using Amazon Elastic Container Service (Amazon ECS) with AWS Fargate. This account contains the orchestration infrastructure (Amazon ECS cluster, container image, AWS Systems Manager Automation) that deploys and manages LZA resources in the Management account and across the organization. Because this account has cross-account access to the Management account, it requires the same level of access restriction.
+
+The LZA Universal Config applies protective SCPs that prevent operators from modifying or deleting LZA-managed resources while permitting the actions required for deployment operations: uploading configuration, triggering automation, and monitoring execution.
+
+NOTE: This account is applicable only to container-based LZA deployments and is added through partition-specific configuration replacements. Standard AWS CodePipeline-based deployments do not require a separate deployment account.
 
 [NOTE]
 ====

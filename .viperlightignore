@@ -3,6 +3,5 @@
 # AWS Security Contact email
 SECURITY.md:6
 
-# Confidentiality tag suggestions
-docs/03-Management-Governance/index.adoc:340
-docs/03-Management-Governance/index.adoc:343
+# Confidentiality tag suggestions (tag value examples, not actual classification)
+docs/03-Management-Governance/index.adoc:357

@@ -48,6 +48,7 @@ release:
     DEFAULT_HUB_SPOKE: lza-universal-config-hub-and-spoke-${CI_COMMIT_TAG}.zip
     DEFAULT_SHARED_VPC: lza-universal-config-shared-vpc-${CI_COMMIT_TAG}.zip
     DEFAULT_AWS_GOVCLOUD_US: lza-universal-config-for-aws-govcloud-us-${CI_COMMIT_TAG}.zip
+    DEFAULT_AWS_EUSC: lza-universal-config-for-aws-european-sovereign-cloud-${CI_COMMIT_TAG}.zip
   before_script:
     - apk add --no-cache nodejs npm zip
   script:
@@ -56,11 +57,13 @@ release:
     - node release-package.js -n hub-and-spoke -v $CI_COMMIT_TAG -o ../$DEFAULT_HUB_SPOKE --upload
     - node release-package.js -n shared-vpc -v $CI_COMMIT_TAG -o ../$DEFAULT_SHARED_VPC --upload
     - node release-package.js -n hub-and-spoke -v $CI_COMMIT_TAG -o ../$DEFAULT_AWS_GOVCLOUD_US -r ../replacements/replacements-for-aws-govcloud-us.yaml --upload
+    - node release-package.js -n hub-and-spoke -v $CI_COMMIT_TAG -o ../$DEFAULT_AWS_EUSC -r ../replacements/replacements-for-aws-european-sovereign-cloud.yaml --upload
   artifacts:
     paths:
       - ${DEFAULT_HUB_SPOKE}.zip
       - ${DEFAULT_SHARED_VPC}.zip
       - ${DEFAULT_AWS_GOVCLOUD_US}.zip
+      - ${DEFAULT_AWS_EUSC}.zip
   rules:
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
       when: always
@@ -77,6 +80,8 @@ release:
           url: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-universal-config/${CI_COMMIT_TAG}/${DEFAULT_SHARED_VPC}
         - name: $DEFAULT_AWS_GOVCLOUD_US
           url: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-universal-config/${CI_COMMIT_TAG}/${DEFAULT_AWS_GOVCLOUD_US}
+        - name: $DEFAULT_AWS_EUSC
+          url: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-universal-config/${CI_COMMIT_TAG}/${DEFAULT_AWS_EUSC}
 
 # ===========================================================================
 # DEPLOY TEMPLATE

@@ -20,6 +20,12 @@ For US government agencies, contractors, and organizations handling sensitive fe
 
 link:us-federal/index.adoc[View US Federal Guidance →]
 
+=== AWS European Sovereign Cloud
+
+For European organizations with data sovereignty requirements deploying workloads in the AWS European Sovereign Cloud partition. Covers EUSC service availability, partition-specific configuration, and deployment guidance.
+
+link:european-sovereign-cloud/index.adoc[View European Sovereign Cloud Guidance →]
+
 '''
 
 link:../index.adoc[Back to Documentation Home]

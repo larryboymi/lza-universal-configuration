@@ -1,0 +1,358 @@
+# Replacements for AWS EUSC (European Sovereign Cloud)
+# These replacements transform the UC (Universal Configuration) to work in the EUSC partition.
+# Applied against the original UC config files before deployment.
+
+- filename: global-config.yaml
+  items:
+    # EUSC: Control Tower enabled but Identity Center access disabled
+    # (not yet available in EUSC)
+    - pattern: "enableIdentityCenterAccess: true # Enables AWS IAM Identity Center for centralized access management"
+      replacement: "enableIdentityCenterAccess: false # Enables AWS IAM Identity Center for centralized access management"
+    # EUSC: Replace controls with empty list (control identifiers differ per partition)
+    - type: deleteBlock
+      startMarker: "  controls:"
+      endMarker: "# AWS IAM Central Root Management"
+      endInclusive: false
+      replacement: "  controls: []"
+    # EUSC does not support Cost and Usage Reports or Budgets
+    - pattern: |
+        # AWS Cost and Usage Reports
+        reports:
+          costAndUsageReport:
+            compression: Parquet # Sets data compression format to Parquet for storage
+            format: Parquet # Defines the output format as Parquet for optimized querying
+            reportName: "{{ AcceleratorPrefix }}-cur" # Name identifier for the Cost and Usage Report
+            s3Prefix: cur # Defines the S3 prefix for the report
+            timeUnit: MONTHLY # Generates reports on a provided interval
+            refreshClosedReports: true # Updates previously generated reports if new charges appear
+            reportVersioning: CREATE_NEW_REPORT # Creates a new report version each time the report is generated
+            lifecycleRules:
+              - enabled: true
+                abortIncompleteMultipartUpload: 7
+                expiration: 365
+                noncurrentVersionExpiration: 365
+          # AWS Budgets Configurations
+          budgets:
+            - deploymentTargets:
+                accounts:
+                  - Management # Deploys budget configuration to Management account
+              name: "{{ AcceleratorPrefix }}-budget" # Name identifier for the budget
+              timeUnit: MONTHLY # Sets budget tracking interval
+              type: COST # Sets budget type to cost
+              amount: 2000 # Sets budget limit to 2000 USD
+              includeUpfront: true # Includes upfront costs in budget calculations
+              includeTax: true # Includes taxes in budget calculations
+              includeSupport: true # Includes AWS support costs in budget
+              includeSubscription: true # Includes subscription costs in budget
+              includeRecurring: true # Includes recurring charges in budget
+              includeOtherSubscription: true # Includes other subscription costs in budget
+              includeDiscount: true # Includes discounts in budget calculations
+              includeCredit: false # Excludes credits from budget calculations
+              includeRefund: false # Excludes refunds from budget calculations
+              useBlended: false # Disables use of blended costs
+              useAmortized: false # Disables use of amortized costs
+              unit: USD # Sets budget currency to US Dollars
+              notifications: # Configures notifications for budget thresholds
+                - type: ACTUAL # Notification based on actual spend
+                  thresholdType: PERCENTAGE # Threshold type defined as percentage
+                  threshold: 100 # Notification at 100% of budget
+                  comparisonOperator: GREATER_THAN # Triggers when spending exceeds threshold
+                  subscriptionType: EMAIL # Delivers notification via email
+                  address: "{{ BudgetsEmail }}" # Email recipient address
+                - type: ACTUAL
+                  thresholdType: PERCENTAGE
+                  threshold: 90 # 90% threshold notification
+                  comparisonOperator: GREATER_THAN
+                  subscriptionType: EMAIL
+                  address: "{{ BudgetsEmail }}"
+                - type: ACTUAL
+                  thresholdType: PERCENTAGE
+                  threshold: 80 # 80% threshold notification
+                  comparisonOperator: GREATER_THAN
+                  subscriptionType: EMAIL
+                  address: "{{ BudgetsEmail }}"
+                - type: ACTUAL
+                  thresholdType: PERCENTAGE
+                  threshold: 75 # 75% threshold notification
+                  comparisonOperator: GREATER_THAN
+                  subscriptionType: EMAIL
+                  address: "{{ BudgetsEmail }}"
+                - type: ACTUAL
+                  thresholdType: PERCENTAGE
+                  threshold: 50 # 50% threshold notification
+                  comparisonOperator: GREATER_THAN
+                  subscriptionType: EMAIL
+                  address: "{{ BudgetsEmail }}"
+      replacement: ""
+
+- filename: security-config.yaml
+  items:
+    # EUSC: Macie not available — remove entire section
+    - type: deleteBlock
+      startMarker: "  # Amazon Macie Configurations"
+      endMarker: "  # AWS GuardDuty Configurations"
+      endInclusive: false
+    # EUSC: Security Hub automation rules not validated — comment out
+    - type: deleteBlock
+      startMarker: "    automationRules:"
+      endMarker: "  # AWS Systems Manager Settings"
+      endInclusive: false
+      replacement: "    automationRules: []"
+    # EUSC: AWS Config rules — keep all rules from UC, comment out unavailable ones
+    # Verified via put-config-rule API (April 2026)
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-sagemaker-endpoint-configuration-kms-key-configured\"\n          identifier: SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED not available\n        # - name: \"{{ AcceleratorPrefix }}-sagemaker-endpoint-configuration-kms-key-configured\"\n        #   identifier: SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-account-part-of-organizations\"\n          identifier: ACCOUNT_PART_OF_ORGANIZATIONS\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: ACCOUNT_PART_OF_ORGANIZATIONS not available\n        # - name: \"{{ AcceleratorPrefix }}-account-part-of-organizations\"\n        #   identifier: ACCOUNT_PART_OF_ORGANIZATIONS\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-dynamodb-throughput-limit-check\"\n          identifier: DYNAMODB_THROUGHPUT_LIMIT_CHECK\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: DYNAMODB_THROUGHPUT_LIMIT_CHECK not available\n        # - name: \"{{ AcceleratorPrefix }}-dynamodb-throughput-limit-check\"\n        #   identifier: DYNAMODB_THROUGHPUT_LIMIT_CHECK\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-cloudtrail-security-trail-enabled\"\n          identifier: CLOUDTRAIL_SECURITY_TRAIL_ENABLED\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: CLOUDTRAIL_SECURITY_TRAIL_ENABLED not available\n        # - name: \"{{ AcceleratorPrefix }}-cloudtrail-security-trail-enabled\"\n        #   identifier: CLOUDTRAIL_SECURITY_TRAIL_ENABLED\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-ebs-in-backup-plan\"\n          identifier: EBS_IN_BACKUP_PLAN\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: EBS_IN_BACKUP_PLAN not available\n        # - name: \"{{ AcceleratorPrefix }}-ebs-in-backup-plan\"\n        #   identifier: EBS_IN_BACKUP_PLAN\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-aurora-resources-protected-by-backup-plan\"\n          complianceResourceTypes:\n            - AWS::RDS::DBCluster\n          identifier: AURORA_RESOURCES_PROTECTED_BY_BACKUP_PLAN\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: AURORA_RESOURCES_PROTECTED_BY_BACKUP_PLAN not available\n        # - name: \"{{ AcceleratorPrefix }}-aurora-resources-protected-by-backup-plan\"\n        #   complianceResourceTypes:\n        #     - AWS::RDS::DBCluster\n        #   identifier: AURORA_RESOURCES_PROTECTED_BY_BACKUP_PLAN\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-cloudtrail-s3-dataevents-enabled\"\n          identifier: CLOUDTRAIL_S3_DATAEVENTS_ENABLED\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: CLOUDTRAIL_S3_DATAEVENTS_ENABLED not available\n        # - name: \"{{ AcceleratorPrefix }}-cloudtrail-s3-dataevents-enabled\"\n        #   identifier: CLOUDTRAIL_S3_DATAEVENTS_ENABLED\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-iam-group-has-users-check\"\n          complianceResourceTypes:\n            - AWS::IAM::Group\n          identifier: IAM_GROUP_HAS_USERS_CHECK\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: IAM_GROUP_HAS_USERS_CHECK not available\n        # - name: \"{{ AcceleratorPrefix }}-iam-group-has-users-check\"\n        #   complianceResourceTypes:\n        #     - AWS::IAM::Group\n        #   identifier: IAM_GROUP_HAS_USERS_CHECK\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-sagemaker-notebook-instance-kms-key-configured\"\n          identifier: SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED not available\n        # - name: \"{{ AcceleratorPrefix }}-sagemaker-notebook-instance-kms-key-configured\"\n        #   identifier: SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-backup-plan-min-frequency-and-min-retention-check\"\n          complianceResourceTypes:\n            - AWS::Backup::BackupPlan\n          identifier: BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK not available\n        # - name: \"{{ AcceleratorPrefix }}-backup-plan-min-frequency-and-min-retention-check\"\n        #   complianceResourceTypes:\n        #     - AWS::Backup::BackupPlan\n        #   identifier: BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: IAM_USER_GROUP_MEMBERSHIP_CHECK not available
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-iam-user-group-membership-check\"\n          complianceResourceTypes:\n            - AWS::IAM::User\n          identifier: IAM_USER_GROUP_MEMBERSHIP_CHECK\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# IAM_USER_GROUP_MEMBERSHIP_CHECK not available in EUSC\n        # - name: \"{{ AcceleratorPrefix }}-iam-user-group-membership-check\"\n        #   complianceResourceTypes:\n        #     - AWS::IAM::User\n        #   identifier: IAM_USER_GROUP_MEMBERSHIP_CHECK\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: EMR_KERBEROS_ENABLED not available
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-emr-kerberos-enabled\"\n          identifier: EMR_KERBEROS_ENABLED\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: EMR_KERBEROS_ENABLED not available\n        # - name: \"{{ AcceleratorPrefix }}-emr-kerberos-enabled\"\n        #   identifier: EMR_KERBEROS_ENABLED\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: GUARDDUTY_NON_ARCHIVED_FINDINGS not available
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-guardduty-non-archived-findings\"\n          inputParameters:\n            daysHighSev: \"1\"\n            daysLowSev: \"30\"\n            daysMediumSev: \"7\"\n          identifier: GUARDDUTY_NON_ARCHIVED_FINDINGS\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: GUARDDUTY_NON_ARCHIVED_FINDINGS not available\n        # - name: \"{{ AcceleratorPrefix }}-guardduty-non-archived-findings\"\n        #   inputParameters:\n        #     daysHighSev: \"1\"\n        #     daysLowSev: \"30\"\n        #     daysMediumSev: \"7\"\n        #   identifier: GUARDDUTY_NON_ARCHIVED_FINDINGS\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: CODEBUILD_PROJECT_ARTIFACT_ENCRYPTION not available
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-codebuild-project-artifact-encryption\"\n          complianceResourceTypes:\n            - AWS::CodeBuild::Project\n          identifier: CODEBUILD_PROJECT_ARTIFACT_ENCRYPTION\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: CODEBUILD_PROJECT_ARTIFACT_ENCRYPTION not available\n        # - name: \"{{ AcceleratorPrefix }}-codebuild-project-artifact-encryption\"\n        #   complianceResourceTypes:\n        #     - AWS::CodeBuild::Project\n        #   identifier: CODEBUILD_PROJECT_ARTIFACT_ENCRYPTION\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: EBS_OPTIMIZED_INSTANCE not available
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-ebs-optimized-instance\"\n          complianceResourceTypes:\n            - AWS::EC2::Instance\n          identifier: EBS_OPTIMIZED_INSTANCE\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: EBS_OPTIMIZED_INSTANCE not available\n        # - name: \"{{ AcceleratorPrefix }}-ebs-optimized-instance\"\n        #   complianceResourceTypes:\n        #     - AWS::EC2::Instance\n        #   identifier: EBS_OPTIMIZED_INSTANCE\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: SECRETSMANAGER_USING_CMK not available
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-secretsmanager-using-cmk\"\n          complianceResourceTypes:\n            - AWS::SecretsManager::Secret\n          identifier: SECRETSMANAGER_USING_CMK\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: SECRETSMANAGER_USING_CMK not available\n        # - name: \"{{ AcceleratorPrefix }}-secretsmanager-using-cmk\"\n        #   complianceResourceTypes:\n        #     - AWS::SecretsManager::Secret\n        #   identifier: SECRETSMANAGER_USING_CMK\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: API_GW_CACHE_ENABLED_AND_ENCRYPTED not available
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-api-gw-cache-enabled-and-encrypted\"\n          complianceResourceTypes:\n            - AWS::ApiGateway::Stage\n          identifier: API_GW_CACHE_ENABLED_AND_ENCRYPTED\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: API_GW_CACHE_ENABLED_AND_ENCRYPTED not available\n        # - name: \"{{ AcceleratorPrefix }}-api-gw-cache-enabled-and-encrypted\"\n        #   complianceResourceTypes:\n        #     - AWS::ApiGateway::Stage\n        #   identifier: API_GW_CACHE_ENABLED_AND_ENCRYPTED\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: RDS_IN_BACKUP_PLAN not available
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-rds-in-backup-plan\"\n          identifier: RDS_IN_BACKUP_PLAN\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: RDS_IN_BACKUP_PLAN not available\n        # - name: \"{{ AcceleratorPrefix }}-rds-in-backup-plan\"\n        #   identifier: RDS_IN_BACKUP_PLAN\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: BACKUP_RECOVERY_POINT_ENCRYPTED not available
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-backup-recovery-point-encrypted\"\n          complianceResourceTypes:\n            - AWS::Backup::RecoveryPoint\n          identifier: BACKUP_RECOVERY_POINT_ENCRYPTED\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: BACKUP_RECOVERY_POINT_ENCRYPTED not available\n        # - name: \"{{ AcceleratorPrefix }}-backup-recovery-point-encrypted\"\n        #   complianceResourceTypes:\n        #     - AWS::Backup::RecoveryPoint\n        #   identifier: BACKUP_RECOVERY_POINT_ENCRYPTED\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: SECURITYHUB_ENABLED not available
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-securityhub-enabled\"\n          identifier: SECURITYHUB_ENABLED\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: SECURITYHUB_ENABLED not available\n        # - name: \"{{ AcceleratorPrefix }}-securityhub-enabled\"\n        #   identifier: SECURITYHUB_ENABLED\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: IAM_NO_INLINE_POLICY_CHECK not available
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-iam-no-inline-policy-check\"\n          complianceResourceTypes:\n            - AWS::IAM::User\n            - AWS::IAM::Role\n            - AWS::IAM::Group\n          identifier: IAM_NO_INLINE_POLICY_CHECK\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: IAM_NO_INLINE_POLICY_CHECK not available\n        # - name: \"{{ AcceleratorPrefix }}-iam-no-inline-policy-check\"\n        #   complianceResourceTypes:\n        #     - AWS::IAM::User\n        #     - AWS::IAM::Role\n        #     - AWS::IAM::Group\n        #   identifier: IAM_NO_INLINE_POLICY_CHECK\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED not available
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-backup-recovery-point-manual-deletion-disabled\"\n          complianceResourceTypes:\n            - AWS::Backup::BackupVault\n          identifier: BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED not available\n        # - name: \"{{ AcceleratorPrefix }}-backup-recovery-point-manual-deletion-disabled\"\n        #   complianceResourceTypes:\n        #     - AWS::Backup::BackupVault\n        #   identifier: BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: EC2_RESOURCES_PROTECTED_BY_BACKUP_PLAN not available
+    - pattern: "- name: \"{{ AcceleratorPrefix }}-ec2-resources-protected-by-backup-plan\"\n          complianceResourceTypes:\n            - AWS::EC2::Instance\n          identifier: EC2_RESOURCES_PROTECTED_BY_BACKUP_PLAN\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\""
+      replacement: "# EUSC: EC2_RESOURCES_PROTECTED_BY_BACKUP_PLAN not available\n        # - name: \"{{ AcceleratorPrefix }}-ec2-resources-protected-by-backup-plan\"\n        #   complianceResourceTypes:\n        #     - AWS::EC2::Instance\n        #   identifier: EC2_RESOURCES_PROTECTED_BY_BACKUP_PLAN\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: AWS::Config::RemediationConfiguration not supported — comment out ec2-instance-profile-attached rule with remediation
+    - pattern: "        # Rules with automated remediation\n        - name: \"{{ AcceleratorPrefix }}-ec2-instance-profile-attached\"\n          complianceResourceTypes:\n            - AWS::EC2::Instance\n          identifier: EC2_INSTANCE_PROFILE_ATTACHED\n          tags:\n            - key: Accelerator\n              value: \"{{ AcceleratorPrefix }}\"\n          remediation:\n            rolePolicyFile: ssm-remediation-roles/attach-ec2-instance-profile-remediation-role.json\n            automatic: true\n            targetId: \"{{ AcceleratorPrefix }}-Attach-IAM-Instance-Profile\"\n            retryAttemptSeconds: 60\n            maximumAutomaticAttempts: 5\n            parameters:\n              - name: InstanceId\n                value: RESOURCE_ID\n                type: String\n              - name: IamInstanceProfile\n                value: ${ACCEL_LOOKUP::InstanceProfile:EC2-Default-SSM-Role}\n                type: StringList"
+      replacement: "        # Rules with automated remediation\n        # AWS::Config::RemediationConfiguration not supported in EUSC — rule and remediation disabled\n        # - name: \"{{ AcceleratorPrefix }}-ec2-instance-profile-attached\"\n        #   complianceResourceTypes:\n        #     - AWS::EC2::Instance\n        #   identifier: EC2_INSTANCE_PROFILE_ATTACHED\n        #   tags:\n        #     - key: Accelerator\n        #       value: \"{{ AcceleratorPrefix }}\"\n        #   remediation:\n        #     rolePolicyFile: ssm-remediation-roles/attach-ec2-instance-profile-remediation-role.json\n        #     automatic: true\n        #     targetId: \"{{ AcceleratorPrefix }}-Attach-IAM-Instance-Profile\"\n        #     retryAttemptSeconds: 60\n        #     maximumAutomaticAttempts: 5\n        #     parameters:\n        #       - name: InstanceId\n        #         value: RESOURCE_ID\n        #         type: String\n        #       - name: IamInstanceProfile\n        #         value: ${ACCEL_LOOKUP::InstanceProfile:EC2-Default-SSM-Role}\n        #         type: StringList"
+    # EUSC: AWS::Config::RemediationConfiguration not supported — comment out remediation on elb-logging-enabled
+    - pattern: "          remediation:\n            rolePolicyFile: ssm-remediation-roles/elb-logging-enabled-remediation-role.json\n            automatic: true\n            targetId: \"{{ AcceleratorPrefix }}-SSM-ELB-Enable-Logging\"\n            retryAttemptSeconds: 60\n            maximumAutomaticAttempts: 5\n            parameters:\n              - name: LoadBalancerArn\n                value: RESOURCE_ID\n                type: String\n              - name: LogDestination\n                value: ${ACCEL_LOOKUP::Bucket:elbLogs}\n                type: StringList"
+      replacement: "          # remediation disabled — AWS::Config::RemediationConfiguration not supported in EUSC\n          # remediation:\n          #   rolePolicyFile: ssm-remediation-roles/elb-logging-enabled-remediation-role.json\n          #   automatic: true\n          #   targetId: \"{{ AcceleratorPrefix }}-SSM-ELB-Enable-Logging\"\n          #   retryAttemptSeconds: 60\n          #   maximumAutomaticAttempts: 5\n          #   parameters:\n          #     - name: LoadBalancerArn\n          #       value: RESOURCE_ID\n          #       type: String\n          #     - name: LogDestination\n          #       value: ${ACCEL_LOOKUP::Bucket:elbLogs}\n          #       type: StringList"
+
+- filename: iam-config.yaml
+  items:
+    # EUSC: Remove Identity Center delegation (not available)
+    - pattern: |
+        identityCenter:
+          name: "{{ AcceleratorPrefix }}-IdentityCenter"
+          delegatedAdminAccount: SharedServices
+      replacement: ""
+
+- filename: accounts-config.yaml
+  items:
+    # EUSC: Add LzaDeploymentAccount for container-based deployment
+    - pattern: "  - name: SharedServices"
+      replacement: "  - name: LzaDeploymentAccount\n    description: Account to access and manage Landing Zone Accelerator on AWS\n    email: <lzadeployment>@example.com  <----- UPDATE EMAIL ADDRESS\n    organizationalUnit: LzaDeployment\n  - name: SharedServices"
+    # EUSC: Add accountIds section after workloadAccounts
+    - pattern: "    email: <perimeter>@example.com  <----- UPDATE EMAIL ADDRESS\n    organizationalUnit: Infrastructure"
+      replacement: "    email: <perimeter>@example.com  <----- UPDATE EMAIL ADDRESS\n    organizationalUnit: Infrastructure\naccountIds:\n  - email: <lzadeployment>@example.com  <----- UPDATE EMAIL ADDRESS\n    accountId: '111111111111'  <----- UPDATE ACCOUNT ID"
+
+- filename: network-config.yaml
+  items:
+    # EUSC: Route53 DNS Firewall managed domain lists not supported — comment out rule group definition
+    - pattern: "    # Route 53 Resolver DNS Firewall\n    firewallRuleGroups:\n      - name: \"{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall\"\n        regions:\n          - \"{{ HomeRegion }}\"\n        rules:\n          - name: block-aggregate-threats\n            action: BLOCK\n            blockResponse: NODATA\n            managedDomainList: AWSManagedDomainsAggregateThreatList\n            priority: 100\n          - name: block-malware-domains\n            action: BLOCK\n            blockResponse: NODATA\n            managedDomainList: AWSManagedDomainsMalwareDomainList\n            priority: 200\n          - name: block-botnet-cnc\n            action: BLOCK\n            blockResponse: NODATA\n            managedDomainList: AWSManagedDomainsBotnetCommandandControl\n            priority: 300\n        shareTargets:\n          accounts:\n            - SharedServices\n            - Perimeter\n          organizationalUnits:\n            - Workloads/Dev\n            - Workloads/Test\n            - Workloads/Prod\n        tags:\n          - key: Accelerator\n            value: \"{{ AcceleratorPrefix }}\""
+      replacement: "    # Route 53 Resolver DNS Firewall\n    # DISABLED: Managed domain lists not available in EUSC\n    # firewallRuleGroups:\n    #   - name: \"{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall\"\n    #     regions:\n    #       - \"{{ HomeRegion }}\"\n    #     rules:\n    #       - name: block-aggregate-threats\n    #         action: BLOCK\n    #         blockResponse: NODATA\n    #         managedDomainList: AWSManagedDomainsAggregateThreatList\n    #         priority: 100\n    #       - name: block-malware-domains\n    #         action: BLOCK\n    #         blockResponse: NODATA\n    #         managedDomainList: AWSManagedDomainsMalwareDomainList\n    #         priority: 200\n    #       - name: block-botnet-cnc\n    #         action: BLOCK\n    #         blockResponse: NODATA\n    #         managedDomainList: AWSManagedDomainsBotnetCommandandControl\n    #         priority: 300\n    #     shareTargets:\n    #       accounts:\n    #         - SharedServices\n    #         - Perimeter\n    #       organizationalUnits:\n    #         - Workloads/Dev\n    #         - Workloads/Test\n    #         - Workloads/Prod\n    #     tags:\n    #       - key: Accelerator\n    #         value: \"{{ AcceleratorPrefix }}\""
+    # EUSC: Route53 DNS Firewall not supported — comment out dnsFirewallRuleGroups on VPCs
+    - pattern: "    dnsFirewallRuleGroups:\n      - name: \"{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall\"\n        priority: 101\n        mutationProtection: ENABLED"
+      replacement: "    # dnsFirewallRuleGroups disabled — managed domain lists not available in EUSC\n    # dnsFirewallRuleGroups:\n    #   - name: \"{{ AcceleratorPrefix }}-{{ HomeRegion }}-dns-firewall\"\n    #     priority: 101\n    #     mutationProtection: ENABLED"
+    # EUSC: Bedrock AgentCore endpoints not available — comment out endpoint policies
+    - pattern: "  - name: AgentCore-DataPlane\n    document: vpc-endpoint-policies/agentcore-data-plane.json\n  - name: AgentCore-Gateway\n    document: vpc-endpoint-policies/agentcore-gateway.json"
+      replacement: "  # AgentCore endpoint policies disabled — services not available in EUSC\n  # - name: AgentCore-DataPlane\n  #   document: vpc-endpoint-policies/agentcore-data-plane.json\n  # - name: AgentCore-Gateway\n  #   document: vpc-endpoint-policies/agentcore-gateway.json"
+    # EUSC: Bedrock AgentCore endpoints not available — comment out services
+    - pattern: "        # Amazon Bedrock AgentCore endpoints\n        - service: bedrock-agentcore\n        - service: bedrock-agentcore-control\n        - service: bedrock-agentcore.gateway"
+      replacement: "        # Amazon Bedrock AgentCore endpoints - not available in EUSC\n        # - service: bedrock-agentcore\n        # - service: bedrock-agentcore-control\n        # - service: bedrock-agentcore.gateway"
+    # EUSC: ec2messages endpoint not available (verified via describe-vpc-endpoint-services April 2026)
+    - pattern: |
+        "        - service: ec2messages"
+      replacement: |
+        "        # - service: ec2messages - not available in EUSC"
+    # EUSC: ECR endpoints use eu.amazonaws prefix — serviceName override required
+    - pattern: "        - service: ecr.api\n        - service: ecr.dkr"
+      replacement: "        # ECR endpoints use eu.amazonaws prefix in EUSC\n        - service: ecr.api\n          serviceName: eu.amazonaws.eusc-de-east-1.ecr.api\n        - service: ecr.dkr\n          serviceName: eu.amazonaws.eusc-de-east-1.ecr.dkr"
+    # EUSC: ssm-incidents endpoint not available (verified via describe-vpc-endpoint-services April 2026)
+    - pattern: |
+        "        - service: ssm-incidents"
+      replacement: |
+        "        # - service: ssm-incidents - not available in EUSC"
+
+- filename: organization-config.yaml
+  items:
+    # EUSC: Add LzaDeployment OU for container-based deployment
+    - pattern: "  - name: Infrastructure"
+      replacement: "  - name: Infrastructure\n  - name: LzaDeployment"
+    # EUSC: Add Deployment Guardrails SCPs for LzaDeployment OU
+    - pattern: "  - name: \"{{ AcceleratorPrefix }}-Quarantine-New-Object\""
+      replacement: "  - name: \"{{ AcceleratorPrefix }}-Deployment-Guardrails-1\"\n    description: >\n      Protects LZA pipeline-deployed resources (Lambda, IAM roles, CFN stacks, SSM parameters, S3, SNS, Kinesis, EventBridge)\n      from unauthorized modification. Uses scoped Resource patterns to exclude InstallerContainerStack resources.\n    policy: service-control-policies/lza-deployment-guardrails-1.json\n    type: customerManaged\n    deploymentTargets:\n      organizationalUnits:\n        - LzaDeployment\n  - name: \"{{ AcceleratorPrefix }}-Deployment-Guardrails-2\"\n    description: >\n      Restricts networking modifications, enforces encryption for storage services, and provides tag-based deletion\n      protection for all InstallerContainerStack resources.\n    policy: service-control-policies/lza-deployment-guardrails-2.json\n    type: customerManaged\n    deploymentTargets:\n      organizationalUnits:\n        - LzaDeployment\n  - name: \"{{ AcceleratorPrefix }}-Quarantine-New-Object\""
+    # EUSC: Declarative policies not supported
+    - pattern: |
+        declarativePolicies:
+          - name: "{{ AcceleratorPrefix }}-Vpc-Block-Public-Access-Guardrail"
+            description: >
+              Declarative policies for VPC Block Public Access.
+              Attached at account level for granular control as some accounts within OUs require exemptions.
+            policy: declarative-policies/lza-core-vpc-block-public-access.json
+            type: customerManaged
+            deploymentTargets:
+              organizationalUnits:
+                - Security
+                - Workloads/Dev
+                - Workloads/Test
+                - Workloads/Prod
+              accounts:
+                - Network
+                - SharedServices
+      replacement: ""
+    # EUSC: Resource Control Policies not supported
+    - type: deleteBlock
+      startMarker: "resourceControlPolicies:"
+      endMarker: "serviceControlPolicies:"
+      endInclusive: false
+      replacement: ""
+    # EUSC: Tagging policies not supported
+    - pattern: |
+        taggingPolicies:
+          # AWS Organizations Tagging Policies
+          # - Enables tag policy for values of backup plans only
+          # - This will only enforce the tag value specified matches one of the backup plans
+          #   - Redshift, RDS, Timestream, DocumentDB, Neptune cannot currently be enforced
+          #   - VMWare VMs are outside of scope for tag enforcement
+          - name: OrgTagPolicy
+            description: Organization Tagging Policy
+            policy: tagging-policies/org-tag-policy.json
+            deploymentTargets:
+              organizationalUnits:
+                - Infrastructure
+                - Workloads
+          # AWS Backup continuous backup is only supported for S3 & RDS but RDS isn't supported by tag policies.
+          #   - https://docs.aws.amazon.com/aws-backup/latest/devguide/point-in-time-recovery.html
+          - name: S3TagPolicy
+            description: S3 Tagging Policy
+            policy: tagging-policies/s3-tag-policy.json
+            deploymentTargets:
+              organizationalUnits:
+                - Infrastructure
+                - Workloads
+      replacement: |
+        taggingPolicies: []
+    # EUSC: Backup policies not supported
+    - pattern: |
+        backupPolicies:
+          # AWS Backup Configuration
+          # https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html
+          # Syntax: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup_syntax.html?icmpid=docs_orgs_console
+          # - Retention is set for 1 year
+          #   - Continuous is set to max of 35 days
+          #   - Monthly is set for two years
+          # - VSS Enabled (Windows) for all plans
+          #   - https://docs.aws.amazon.com/aws-backup/latest/devguide/windows-backups.html
+          # - Available Backup Plans
+          #   - Continuous
+          #   - Hourly
+          #   - Daily
+          #   - Weekly
+          #   - Monthly
+          # - Backup Window
+          #   - Set to AWS Backup default of 5am UTC
+          # - Tag policy with list of backup plans has been created for you, if changes in policies are made you should also update this tag policy too
+          - name: "{{ AcceleratorPrefix }}-BackupPolicy"
+            description: Organization Backup Policy
+            policy: backup-policies/primary-backup-plan.json
+            deploymentTargets:
+              organizationalUnits:
+                - Infrastructure
+                - Workloads
+      replacement: |
+        backupPolicies: []
+
+- filename: replacements-config.yaml
+  items:
+    # Remove BudgetsEmail replacement since CUR/Budgets are not available in EUSC
+    - pattern: |
+        "  # AWS Budgets Notification Emails"
+        "  - key: BudgetsEmail"
+        "    type: String"
+        "    value: <budget-notifications>@example.com  <----- UPDATE EMAIL ADDRESS"
+        ""
+      replacement: ""
+    # EUSC: Update HomeRegion and EnabledRegions to EUSC region
+    - pattern: |
+        globalReplacements:
+          # Accelerator Prefix
+          - key: AcceleratorPrefix
+            type: String
+            value: AWSAccelerator
+          # Home Region
+          - key: HomeRegion
+            type: String
+            value: us-east-1 # <----- UPDATE TO YOUR HOME REGION
+          - key: EnabledRegions
+            type: StringList
+            value:
+              - "us-east-1" # <----- UPDATE TO INCLUDE HOME REGION + ADDITIONAL REGIONS TO ENABLE
+              # - "us-west-2" # <----- ADD ADDITIONAL REGIONS AS NEEDED
+      replacement: |
+        globalReplacements:
+          # Accelerator Prefix
+          - key: AcceleratorPrefix
+            type: String
+            value: AWSAccelerator
+          # Accelerator Qualifier (container deployment)
+          - key: AcceleratorQualifier
+            type: String
+            value: lza1  # <----- UPDATE TO MATCH AcceleratorQualifier in the installer stack
+          # Home Region
+          - key: HomeRegion
+            type: String
+            value: eusc-de-east-1 # <----- UPDATE TO YOUR HOME REGION
+          - key: EnabledRegions
+            type: StringList
+            value:
+              - "eusc-de-east-1" # <----- UPDATE TO INCLUDE HOME REGION + ADDITIONAL REGIONS TO ENABLE
+
+
+# Post-processing actions (applied after all file replacements)
+# Removes folders that are no longer referenced after replacements are applied
+- postActions:
+    - type: removeFolder
+      folders:
+        - declarative-policies
+        - rcp-policies
+        - backup-policies
+        - tagging-policies

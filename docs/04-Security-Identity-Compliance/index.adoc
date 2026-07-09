@@ -691,6 +691,32 @@ Service Control Policies represent the strongest form of access control in AWS O
 For a complete list of limitations, refer to the https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html#scp-effects-on-permissions[AWS Organizations documentation].
 ====
 
+==== Container Deployment Account Protection with Deployment Guardrails
+
+The LZA Universal Configuration applies two preventive guardrails to the LZA Deployment OU for accounts hosting container-based LZA deployments.
+
+NOTE: These SCPs are applicable only to container-based LZA deployments. Standard AWS CodePipeline-based deployments do not require these policies.
+
+*Operator Actions Permitted*::
+Operators in the LZA Deployment account can:
+
+* Upload configuration files to the Amazon S3 configuration bucket
+* Trigger LZA deployments through AWS Systems Manager automation (`RunEngine`)
+* Update the InstallerContainerStack through AWS CloudFormation
+* Monitor deployment status through Amazon CloudWatch Logs, AWS CloudFormation, and Amazon ECS
+
+*LZA Resource Modification Protection (Guardrails 1)*::
+Prevents unauthorized modification of pipeline-deployed LZA resources including AWS Lambda functions, AWS IAM roles, AWS CloudFormation stacks, AWS Systems Manager parameters, Amazon S3 buckets, Amazon CloudWatch log groups, Amazon SNS topics, Amazon Kinesis/Amazon Data Firehose streams, and Amazon EventBridge rules. Prevents disabling or reconfiguration of Amazon GuardDuty, AWS Security Hub, and Amazon Macie. Denies all actions for the root account.
+
+*Networking, Encryption, and Deletion Protection (Guardrails 2)*::
+Prevents unauthorized networking changes, enforces storage encryption, and protects InstallerContainerStack resources from deletion:
+
+* Blocks Amazon VPC, subnet, NAT gateway, internet gateway, transit gateway, route, and IPAM modifications
+* Requires encryption for Amazon EFS file systems, Amazon RDS instances, and Amazon Aurora clusters
+* Blocks deletion of resources tagged with the accelerator prefix or qualifier
+
+The implementation includes exception conditions that allow authorized roles (accelerator deployment roles and management access roles) to make legitimate changes while blocking all unauthorized modification attempts.
+
 === Data Perimeter Controls (RCPs)
 
 link:https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps.html[Resource Control Policies (RCPs)] complement SCPs by applying guardrails directly to AWS resources rather than to identities. Where SCPs constrain what principals in your organization can do, RCPs constrain what can be done to your resources—regardless of who makes the request. Together they form the two sides of an link:https://aws.amazon.com/identity/data-perimeters-on-aws/[AWS data perimeter]: SCPs protect the identity boundary, RCPs protect the resource boundary.

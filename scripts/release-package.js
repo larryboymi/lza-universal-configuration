@@ -230,10 +230,29 @@ async function main() {
     const replacements = loadReplacements(replacementsFile);
 
     for (const fileConfig of replacements) {
+      // Skip postActions entries (handled separately below)
+      if (fileConfig.postActions) continue;
+
       const configDir = path.join(tempDir, "config");
       const modifiedContent = processConfigFile(configDir, fileConfig);
       const filePath = path.join(configDir, fileConfig.filename);
       fs.writeFileSync(filePath, modifiedContent, "utf8");
+    }
+
+    // Process postActions (folder removal, etc.)
+    for (const entry of replacements) {
+      if (!entry.postActions) continue;
+      for (const action of entry.postActions) {
+        if (action.type === "removeFolder") {
+          for (const folder of action.folders) {
+            const folderPath = path.join(tempDir, "config", folder);
+            if (fs.existsSync(folderPath)) {
+              removeDir(folderPath);
+              console.log(`Removed folder: ${folder}`);
+            }
+          }
+        }
+      }
     }
   }
 
