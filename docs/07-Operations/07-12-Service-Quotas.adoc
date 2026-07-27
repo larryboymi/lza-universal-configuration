@@ -1,0 +1,27 @@
+
+== Service Quotas
+
+=== Overview
+
+Certain AWS Service Quotas may need to be increased before deploying the LZA Universal Configuration. This section documents quotas that commonly require adjustment based on your deployment scope.
+
+=== AWS Organizations Account Quota
+
+AWS Organizations has a default maximum of 10 accounts per organization. Newly created organizations may start with a quota lower than 10. The LZA Universal Configuration creates at least 6 accounts during initial deployment (LogArchive, Audit, Network, Perimeter, SharedServices, and the pre-existing Management account). Additional workload accounts increase this total.
+
+Before deploying for the first time, verify your account quota and request an increase if needed. The LZA pipeline will fail to create accounts once the quota is reached.
+
+==== Requesting a Quota Increase
+
+1. Sign in to the Management account
+2. Open the link:https://console.aws.amazon.com/servicequotas/home/services/organizations/quotas[Service Quotas console for AWS Organizations]
+3. Select **Default maximum number of accounts**
+4. Choose **Request increase at account level**
+5. Enter the desired value based on your planned account count
+
+[NOTE]
+====
+An invitation sent to an existing account also counts against this quota. If you plan to invite existing accounts into the organization, include those in your total.
+====
+
+For the full list of AWS Organizations quotas, see link:https://docs.aws.amazon.com/organizations/latest/userguide/orgs_reference_limits.html[Quotas for AWS Organizations].

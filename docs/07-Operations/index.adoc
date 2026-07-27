@@ -139,6 +139,9 @@ Instructions for integrating third-party solutions with LZA using CloudFormation
 === link:./07-11-Managing-Stack-Policies.adoc[07-11-Managing-Stack-Policies]
 Step-by-step guide for managing AWS CloudFormation Stack Policies in LZA. Covers temporarily disabling protection to update critical resources, adding new protected resource types, and verifying policy status.
 
+=== link:./07-12-Service-Quotas.adoc[07-12-Service-Quotas]
+Service quota requirements and increase procedures for initial LZA deployment. Covers AWS Organizations account limits and other quotas to review before deploying.
+
 [IMPORTANT]
 ====
 Before making any changes to your LZA configuration, thoroughly review the relevant operation guide to understand the full impact of your changes and follow best practices specific to that area.
