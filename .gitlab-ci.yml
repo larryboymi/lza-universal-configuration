@@ -54,8 +54,8 @@ release:
   script:
     - cd scripts
     - npm install
-    - node release-package.js -n hub-and-spoke -v $CI_COMMIT_TAG -o ../$DEFAULT_HUB_SPOKE --upload
-    - node release-package.js -n shared-vpc -v $CI_COMMIT_TAG -o ../$DEFAULT_SHARED_VPC --upload
+    - node release-package.js -n hub-and-spoke -v $CI_COMMIT_TAG -o ../$DEFAULT_HUB_SPOKE -r ../replacements/replacements-for-aws-standard.yaml --upload
+    - node release-package.js -n shared-vpc -v $CI_COMMIT_TAG -o ../$DEFAULT_SHARED_VPC -r ../replacements/replacements-for-aws-standard.yaml --upload
     - node release-package.js -n hub-and-spoke -v $CI_COMMIT_TAG -o ../$DEFAULT_AWS_GOVCLOUD_US -r ../replacements/replacements-for-aws-govcloud-us.yaml --upload
     - node release-package.js -n hub-and-spoke -v $CI_COMMIT_TAG -o ../$DEFAULT_AWS_EUSC -r ../replacements/replacements-for-aws-european-sovereign-cloud.yaml --upload
   artifacts:

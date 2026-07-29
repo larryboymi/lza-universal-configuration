@@ -1,0 +1,8 @@
+# Replacements for AWS Standard (Commercial) partition
+# These replacements remove resources not needed in standard CodePipeline-based deployments.
+
+- postActions:
+    - type: removeFile
+      files:
+        - service-control-policies/lza-deployment-guardrails-1.json
+        - service-control-policies/lza-deployment-guardrails-2.json

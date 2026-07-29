@@ -239,7 +239,7 @@ async function main() {
       fs.writeFileSync(filePath, modifiedContent, "utf8");
     }
 
-    // Process postActions (folder removal, etc.)
+    // Process postActions (folder removal, file removal, etc.)
     for (const entry of replacements) {
       if (!entry.postActions) continue;
       for (const action of entry.postActions) {
@@ -249,6 +249,15 @@ async function main() {
             if (fs.existsSync(folderPath)) {
               removeDir(folderPath);
               console.log(`Removed folder: ${folder}`);
+            }
+          }
+        }
+        if (action.type === "removeFile") {
+          for (const file of action.files) {
+            const filePath = path.join(tempDir, "config", file);
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+              console.log(`Removed file: ${file}`);
             }
           }
         }
