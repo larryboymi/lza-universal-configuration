@@ -693,12 +693,12 @@ For a complete list of limitations, refer to the https://docs.aws.amazon.com/org
 
 ==== Container Deployment Account Protection with Deployment Guardrails
 
-The LZA Universal Configuration applies two preventive guardrails to the LZA Deployment OU for accounts hosting container-based LZA deployments.
+The LZA Universal Configuration applies two preventive guardrails to the LzaDeployment OU for accounts hosting container-based LZA deployments.
 
-NOTE: These SCPs are applicable only to container-based LZA deployments. Standard AWS CodePipeline-based deployments do not require these policies.
+NOTE: These SCPs are applicable only to container-based LZA deployments in partitions that require it, such as the AWS European Sovereign Cloud. Standard AWS CodePipeline-based deployments do not require these policies.
 
 *Operator Actions Permitted*::
-Operators in the LZA Deployment account can:
+Operators in the LzaDeployment account can:
 
 * Upload configuration files to the Amazon S3 configuration bucket
 * Trigger LZA deployments through AWS Systems Manager automation (`RunEngine`)

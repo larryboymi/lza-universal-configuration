@@ -45,30 +45,36 @@ Certain AWS services and features used in the standard Universal Configuration a
 * Amazon Bedrock AgentCore VPC endpoints
 * VPC Endpoints: `ec2messages`, `ssm-incidents`
 * AWS Config Rules:
-** `SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED`
-** `ACCOUNT_PART_OF_ORGANIZATIONS`
-** `DYNAMODB_THROUGHPUT_LIMIT_CHECK`
-** `CLOUDTRAIL_SECURITY_TRAIL_ENABLED`
-** `EBS_IN_BACKUP_PLAN`
-** `AURORA_RESOURCES_PROTECTED_BY_BACKUP_PLAN`
-** `CLOUDTRAIL_S3_DATAEVENTS_ENABLED`
-** `IAM_GROUP_HAS_USERS_CHECK`
-** `SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED`
-** `BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK`
-** `IAM_USER_GROUP_MEMBERSHIP_CHECK`
-** `EMR_KERBEROS_ENABLED`
-** `GUARDDUTY_NON_ARCHIVED_FINDINGS`
-** `CODEBUILD_PROJECT_ARTIFACT_ENCRYPTION`
-** `EBS_OPTIMIZED_INSTANCE`
-** `SECRETSMANAGER_USING_CMK`
-** `API_GW_CACHE_ENABLED_AND_ENCRYPTED`
-** `RDS_IN_BACKUP_PLAN`
-** `BACKUP_RECOVERY_POINT_ENCRYPTED`
-** `SECURITYHUB_ENABLED`
-** `IAM_NO_INLINE_POLICY_CHECK`
-** `BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED`
-** `EC2_RESOURCES_PROTECTED_BY_BACKUP_PLAN`
-** `EC2_INSTANCE_PROFILE_ATTACHED`
+** _IAM_
+*** `IAM_GROUP_HAS_USERS_CHECK`
+*** `IAM_USER_GROUP_MEMBERSHIP_CHECK`
+*** `IAM_NO_INLINE_POLICY_CHECK`
+** _EC2 / EBS_
+*** `EBS_OPTIMIZED_INSTANCE`
+*** `EC2_INSTANCE_PROFILE_ATTACHED`
+** _Backup_
+*** `EBS_IN_BACKUP_PLAN`
+*** `RDS_IN_BACKUP_PLAN`
+*** `EC2_RESOURCES_PROTECTED_BY_BACKUP_PLAN`
+*** `AURORA_RESOURCES_PROTECTED_BY_BACKUP_PLAN`
+*** `BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK`
+*** `BACKUP_RECOVERY_POINT_ENCRYPTED`
+*** `BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED`
+** _CloudTrail_
+*** `CLOUDTRAIL_SECURITY_TRAIL_ENABLED`
+*** `CLOUDTRAIL_S3_DATAEVENTS_ENABLED`
+** _Security Services_
+*** `GUARDDUTY_NON_ARCHIVED_FINDINGS`
+*** `SECURITYHUB_ENABLED`
+*** `ACCOUNT_PART_OF_ORGANIZATIONS`
+*** `EMR_KERBEROS_ENABLED`
+*** `DYNAMODB_THROUGHPUT_LIMIT_CHECK`
+** _Encryption / Secrets_
+*** `SECRETSMANAGER_USING_CMK`
+*** `SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED`
+*** `SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED`
+*** `CODEBUILD_PROJECT_ARTIFACT_ENCRYPTION`
+*** `API_GW_CACHE_ENABLED_AND_ENCRYPTED`
 * AWS Config Remediation (`AWS::Config::RemediationConfiguration`)
 
 [NOTE]
@@ -89,7 +95,7 @@ The following diagram shows the AWS European Sovereign Cloud architecture with a
 image::./assets/esc-hub-and-spoke-networking-diagram.png[AWS European Sovereign Cloud Architecture]
 
 [NOTE]
-- AWS Network Firewall is used for east-west traffic inspection.
+- AWS Network Firewall is used for north-south and east-west traffic inspection.
 - Internet Gateway (IGW) is provided for both ingress and egress VPCs. Update these based on your requirements in Post-Deployment Considerations.
 - The LZA Deployment account contains a dedicated VPC used exclusively for running the Amazon ECS container tasks that orchestrate LZA deployments. This VPC is not a shared services VPC for workloads. Keep this VPC isolated from your workload networks to separate deployment infrastructure from application environments. If you use an existing VPC, ensure it has appropriate network segmentation and security controls to protect the ECS deployment tasks.
 
@@ -174,6 +180,10 @@ mandatoryAccounts:
     organizationalUnit: Security
 
 workloadAccounts:
+  - name: LzaDeploymentAccount
+    description: Account to access and manage Landing Zone Accelerator on AWS
+    email: <lzadeployment>@example.com  # <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: LzaDeployment
   - name: SharedServices
     description: The SharedServices account
     email: <shared-services>@example.com  # <----- UPDATE EMAIL ADDRESS
@@ -186,6 +196,10 @@ workloadAccounts:
     description: The Perimeter account
     email: <perimeter>@example.com  # <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Infrastructure
+
+accountIds:
+  - email: <lzadeployment>@example.com  # <----- UPDATE EMAIL ADDRESS
+    accountId: '111111111111'  # <----- UPDATE ACCOUNT ID
 ----
 
 ===== replacements-config.yaml
@@ -205,6 +219,17 @@ globalReplacements:
   - key: AcceleratorQualifier
     type: String
     value: lza1  # <----- UPDATE TO MATCH AcceleratorQualifier in the installer stack
+
+  # SNS email notification configuration
+  - key: SecurityHigh
+    type: String
+    value: <notify-high>@example.com  # <----- UPDATE EMAIL ADDRESS
+  - key: SecurityMedium
+    type: String
+    value: <notify-medium>@example.com  # <----- UPDATE EMAIL ADDRESS
+  - key: SecurityLow
+    type: String
+    value: <notify-low>@example.com  # <----- UPDATE EMAIL ADDRESS
 ----
 
 ==== Deploy Configuration

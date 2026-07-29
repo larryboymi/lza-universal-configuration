@@ -9,11 +9,11 @@
 
 = Management and Governance
 
-The LZA Universal Config delivers a comprehensive, ready-to-deploy Management and Governance framework that solves the complex challenges organizations face when establishing and maintaining secure, compliant multi-account AWS environments. Built upon years of AWS Professional Services experience and real-world customer implementations, this solution reduces the guesswork for choosing infrastructure baselines that lead to desired security and compliance-ready outcomes through pre-configured components.
+The LZA Universal Config delivers a comprehensive, ready-to-deploy management and governance framework that solves the complex challenges organizations face when establishing and maintaining secure, compliant multi-account AWS environments. Built upon years of AWS Professional Services experience and real-world customer implementations, this solution reduces the guesswork for choosing infrastructure baselines that lead to desired security and compliance-ready outcomes through pre-configured components.
 
 Organizations adopting AWS at scale consistently struggle with establishing effective management and governance structures. These challenges include designing efficient organizational hierarchies, implementing appropriate access controls, ensuring consistent resource configurations, and maintaining security baselines across multiple accounts and regions. Without a comprehensive approach, organizations risk security vulnerabilities, compliance gaps, operational inefficiencies, and increased management overhead.
 
-The Management and Governance components of LZA Universal Config directly address these challenges by implementing AWS Well-Architected best practices and aligning with major compliance frameworks such as NIST 800-53, ISO 27001, PCI DSS, HIPAA, Germany C5 2020, and NATO Directive D-32 (2021). The solution provides a universal configuration that establishes guardrails, standardizes account provisioning, centralizes logging, and enables comprehensive backup strategies—all through declarative configuration rather than complex custom development.
+The management and governance components of LZA Universal Config directly address these challenges by implementing AWS Well-Architected best practices and aligning with major compliance frameworks such as NIST 800-53, ISO 27001, PCI DSS, HIPAA, Germany C5 2020, and NATO Directive D-32 (2021). The solution provides a universal configuration that establishes guardrails, standardizes account provisioning, centralizes logging, and enables comprehensive backup strategies—all through declarative configuration rather than complex custom development.
 
 By implementing the LZA Universal Config, organizations can reduce cloud foundation setup time from months to days, decrease security and compliance risks through standardized controls, and enable operational teams to focus on business value rather than infrastructure management.
 
@@ -54,7 +54,7 @@ The Suspended OU creates a secure containment zone for accounts that have been d
 
 The LzaDeployment OU houses the dedicated account for container-based LZA deployments. The LZA Universal Config applies specialized SCPs to this OU that protect LZA-managed resources from unauthorized modification and deletion while permitting operators to perform deployment operations.
 
-NOTE: This OU is applicable only to container-based LZA deployments and is added through partition-specific configuration replacements. Standard AWS CodePipeline-based deployments do not use this OU.
+NOTE: This OU is applicable only to container-based LZA deployments in partitions that require it, such as the AWS European Sovereign Cloud. Standard AWS CodePipeline-based deployments do not use this OU.
 
 ===== Workloads OU
 
@@ -260,7 +260,7 @@ The LzaDeployment account hosts the deployment infrastructure for the container 
 
 The LZA Universal Config applies protective SCPs that prevent operators from modifying or deleting LZA-managed resources while permitting the actions required for deployment operations: uploading configuration, triggering automation, and monitoring execution.
 
-NOTE: This account is applicable only to container-based LZA deployments and is added through partition-specific configuration replacements. Standard AWS CodePipeline-based deployments do not require a separate deployment account.
+NOTE: This account is applicable only to container-based LZA deployments in partitions that require it, such as the AWS European Sovereign Cloud. Standard AWS CodePipeline-based deployments do not require a separate deployment account.
 
 [NOTE]
 ====
