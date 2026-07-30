@@ -8,9 +8,11 @@ We highly recommend that you keep your environments up to date by upgrading to t
 
 When applying updates, review the changes in this release alongside your current configuration to decide which features from this version to adopt.
 
-## [1.3.0] - 2026-05-18
+## [1.3.0] - 2026-07-31
 
 ### New Features
+
+- **AWS European Sovereign Cloud Support**: Added the LZA Universal Configuration for the [AWS European Sovereign Cloud](https://aws.eu/) partition, providing the same security controls and architecture as the standard Universal Configuration, adapted for partition-specific service availability and container-based deployment.
 
 - **Amazon Bedrock AgentCore SCP Guardrails**: Added three SCP statements (`GRAGENTCORE1`, `GRAGENTCORE2`, `GRAGENTCORE3`) to both the Workloads and Infrastructure guardrail policies enforcing VPC isolation and encryption for AgentCore resources:
   - Denies creation/update of AgentCore Runtimes, Code Interpreters, and Browsers without VPC subnet and security group configuration
@@ -23,11 +25,36 @@ When applying updates, review the changes in this release alongside your current
 
   **Upgrade Notes**: If any accounts have legitimate cross-account integrations with principals outside the organization, these statements will block those integrations. Use IAM Access Analyzer to review existing external access findings before deploying.
 
+- **Amazon Bedrock AgentCore VPC Endpoints**: Added PrivateLink endpoints for AgentCore services with organization-scoped endpoint policies.
+
+- **DNS Firewall Rule Groups**: Added DNS Firewall rule groups for workload and infrastructure VPCs to control outbound DNS resolution.
+
+- **Transit Gateway Flow Logs**: Enabled Transit Gateway flow logs for centralized network traffic visibility.
+
+- **Route 53 Resolver Query Logging**: Enabled Route 53 Resolver query logging across all VPCs for DNS audit visibility.
+
+- **CloudFormation Stack Policies**: Added stack policy protection for critical networking resources to prevent accidental resource deletion or replacement during stack updates.
+
+- **Service Quotas Guidance**: Added documentation for AWS Organizations account quota considerations when deploying the LZA Universal Configuration.
+
 ### Bug Fixes
 
 - **Egress VPC Transit Gateway Route Table**: Fixed the egress VPC Transit Gateway attachment route table association from `tgw-rt-firewall` to `tgw-rt-spoke`. This ensures symmetric routing through the inspection VPC, which is required for stateful traffic inspection to function correctly.
 
-  **Upgrade Notes**: This change requires **two pipeline runs** with a **change window**. Run 1 removes the existing egress VPC TGW attachment and associated routes. Run 2 re-creates the attachment with the corrected `tgw-rt-spoke` association and restores all routes. There will be connectivity downtime between Run 1 (old attachment deleted) and Run 2 (new attachment created) for traffic traversing the egress path. Perform during a scheduled change window and validate connectivity after Run 2 completes.
+  **Upgrade Notes**: This change requires **two pipeline runs** with a **change window**. Run 1 removes the existing egress VPC TGW route table association and propagation. Run 2 creates the new association to `tgw-rt-spoke` and adds propagations. The TGW attachment itself does not need to be deleted. There will be connectivity downtime between Run 1 (association removed) and Run 2 (new association created) for traffic traversing the egress path. Perform during a scheduled change window and validate connectivity after Run 2 completes.
+
+- **DNS Firewall Share Targets**: Removed the Network account from DNS Firewall share targets to prevent resource conflicts.
+
+- **S3 Backup Policies**: Updated backup policies and permissions to resolve S3 backup operation failures.
+
+- **Tag Policy Key**: Fixed the outer key in the S3 tag policy to match the enforced tag key name.
+
+- **Security Hub Automation**: Fixed `AcceleratorPrefix` variable usage in S3 automation `ResourceTags` filters.
+
+### Improvements
+
+- **Log Analysis Documentation**: Consolidated central log bucket access guidance into the log analysis operations guide.
+- **Documentation**: Categorized AWS Config Rules by service domain, corrected Network Firewall traffic description, and standardized account naming conventions.
 
 ---
 
