@@ -132,6 +132,7 @@ try {
   fs.writeFileSync(accountsConfigFilename, yaml.dump(accountsConfig), "utf8");
 } catch (error) {
   console.error(error);
+  process.exit(1);
 }
 
 function getWorkloadAccounts(name, ou) {

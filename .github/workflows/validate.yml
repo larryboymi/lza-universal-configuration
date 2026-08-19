@@ -1,0 +1,75 @@
+name: Validate configuration
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  offline-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: scripts/pnpm-lock.yaml
+
+      - name: Install script dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: scripts
+
+      - name: Run offline tests
+        run: pnpm test
+        working-directory: scripts
+
+      - name: Compose healthcare hub-and-spoke configuration
+        run: >-
+          node scripts/compose-config.js
+          --base modules/base/default
+          --network modules/network/hub-and-spoke
+          --profile modules/industry/healthcare
+          --output build/healthcare-hub-and-spoke
+
+      - name: Validate generated healthcare configuration
+        run: >-
+          node scripts/validate-generated-config.js
+          --config build/healthcare-hub-and-spoke
+          --profile modules/industry/healthcare
+
+      - name: Validate hub-and-spoke network structure
+        run: node scripts/validate-network-config.js build/healthcare-hub-and-spoke
+
+      - name: Download pinned LZA schemas
+        run: pnpm schemas:download
+        working-directory: scripts
+
+      - name: Validate against the pinned LZA schemas
+        run: >-
+          node scripts/validate-lza-schema.js
+          --config build/healthcare-hub-and-spoke
+          --schemas scripts/.cache/lza-schemas/1.16.0
+
+      - name: Archive composition evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: healthcare-hub-and-spoke-composition
+          path: |
+            build/healthcare-hub-and-spoke/composition-report.json
+            build/healthcare-hub-and-spoke/*.yaml
+          if-no-files-found: error
+          retention-days: 14

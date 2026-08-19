@@ -58,6 +58,7 @@ Pre-configured LZA Universal Configuration files organized by the following depl
 
 - **[Base configurations](./modules/base/default)** - Security, Governance, and Organization settings
 - **[Network configurations](./modules/network)** - Hub-and-spoke, and Shared VPC networking patterns
+- **[Healthcare profile](./docs/08-Region-and-Industry-Guidance/healthcare/README.md)** - An optional overlay for regulated healthcare workloads using the hub-and-spoke model
 
 ### Documentation
 

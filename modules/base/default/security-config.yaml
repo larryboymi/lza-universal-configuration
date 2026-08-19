@@ -67,6 +67,12 @@ centralSecurityServices:
       - name: CIS AWS Foundations Benchmark v3.0.0
         # Center for Internet Security (CIS) AWS Foundations Benchmark v3.0.0
         #   - https://docs.aws.amazon.com/securityhub/latest/userguide/cis-aws-foundations-benchmark.html
+        # Security Hub evaluates controls from both CIS Level 1 and Level 2 when the standard is enabled.
+        # The healthcare profile currently declares Level 1 as its adherence target while retaining Level 2
+        # findings as non-enforcing visibility. If a future workload must exclude Level 2 findings, add the
+        # reviewed, benchmark-version-specific control IDs below. Do not infer them from control severity.
+        # controlsToDisable:
+        #   - <reviewed-level-2-control-id>
         enable: true
         deploymentTargets:
           organizationalUnits:

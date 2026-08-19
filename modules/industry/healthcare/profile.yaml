@@ -1,0 +1,118 @@
+schemaVersion: 1
+profile:
+  id: healthcare
+  title: Healthcare regulated-workload profile
+  compatibleUniversalConfiguration: 1.3.0
+  compatibleLza: 1.16.0
+  partition: aws
+  preferredNetwork: hub-and-spoke
+  hubAccount: Network
+  cis:
+    benchmarkVersion: 3.0.0
+    targetLevel: 1
+    level2Controls: monitor
+  permissionBoundaryStrategy: retain-universal-baseline
+  hipaaEligibleServicesPolicy:
+    mode: staged-unattached
+    sourceRevision: aws-samples/landing-zone-accelerator-on-aws-for-healthcare@2916b696566c4116661475864dd4f087664aabed
+    sourceReviewedOn: 2025-11-17
+
+assets:
+  - source: tagging-policies/healthcare-data-classification.json
+    destination: tagging-policies/healthcare-data-classification.json
+  - source: service-control-policies/healthcare-hipaa-eligible-services.json
+    destination: service-control-policies/healthcare-hipaa-eligible-services.json
+
+operations:
+  - op: appendUniqueObject
+    file: organization-config.yaml
+    path: /organizationalUnits
+    identity: name
+    value:
+      name: Workloads/PolicyStaging
+  - op: appendUniqueObject
+    file: organization-config.yaml
+    path: /organizationalUnits
+    identity: name
+    value:
+      name: Workloads/PolicyStaging/Healthcare
+  - op: appendUniqueObject
+    file: organization-config.yaml
+    path: /organizationalUnits
+    identity: name
+    value:
+      name: Workloads/Dev/Healthcare
+  - op: appendUniqueObject
+    file: organization-config.yaml
+    path: /organizationalUnits
+    identity: name
+    value:
+      name: Workloads/Test/Healthcare
+  - op: appendUniqueObject
+    file: organization-config.yaml
+    path: /organizationalUnits
+    identity: name
+    value:
+      name: Workloads/Prod/Healthcare
+  - op: appendUniqueObject
+    file: organization-config.yaml
+    path: /serviceControlPolicies
+    identity: name
+    value:
+      name: "{{ AcceleratorPrefix }}-Healthcare-Hipaa-Eligible-Services"
+      description: Staged HIPAA-eligible-services allow-list; intentionally unattached until live policy testing is complete.
+      policy: service-control-policies/healthcare-hipaa-eligible-services.json
+      type: customerManaged
+      deploymentTargets:
+        organizationalUnits: []
+  - op: appendUniqueObject
+    file: organization-config.yaml
+    path: /taggingPolicies
+    identity: name
+    value:
+      name: HealthcareDataClassification
+      description: Standardizes healthcare workload environment and data-classification tag values.
+      policy: tagging-policies/healthcare-data-classification.json
+      deploymentTargets:
+        organizationalUnits:
+          - Workloads/PolicyStaging/Healthcare
+          - Workloads/Dev/Healthcare
+          - Workloads/Test/Healthcare
+          - Workloads/Prod/Healthcare
+  - op: set
+    file: global-config.yaml
+    path: /cloudwatchLogRetentionInDays
+    expected: 365
+    value: 3653
+  - op: appendUniqueScalar
+    file: network-config.yaml
+    path: /transitGateways/@name={{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw/shareTargets/organizationalUnits
+    value: Workloads/PolicyStaging/Healthcare
+  - op: appendUniqueScalar
+    file: network-config.yaml
+    path: /transitGateways/@name={{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw/shareTargets/organizationalUnits
+    value: Workloads/Dev/Healthcare
+  - op: appendUniqueScalar
+    file: network-config.yaml
+    path: /transitGateways/@name={{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw/shareTargets/organizationalUnits
+    value: Workloads/Test/Healthcare
+  - op: appendUniqueScalar
+    file: network-config.yaml
+    path: /transitGateways/@name={{ AcceleratorPrefix }}-{{ HomeRegion }}-tgw/shareTargets/organizationalUnits
+    value: Workloads/Prod/Healthcare
+  - op: appendUniqueScalar
+    file: network-config.yaml
+    path: /centralNetworkServices/ipams/@name={{ AcceleratorPrefix }}-{{ HomeRegion }}-ipam/pools/@name={{ AcceleratorPrefix }}-{{ HomeRegion }}-ipam-workloads-dev-pool/shareTargets/organizationalUnits
+    value: Workloads/PolicyStaging/Healthcare
+  - op: appendUniqueScalar
+    file: network-config.yaml
+    path: /centralNetworkServices/ipams/@name={{ AcceleratorPrefix }}-{{ HomeRegion }}-ipam/pools/@name={{ AcceleratorPrefix }}-{{ HomeRegion }}-ipam-workloads-dev-pool/shareTargets/organizationalUnits
+    value: Workloads/Dev/Healthcare
+  - op: appendUniqueScalar
+    file: network-config.yaml
+    path: /centralNetworkServices/ipams/@name={{ AcceleratorPrefix }}-{{ HomeRegion }}-ipam/pools/@name={{ AcceleratorPrefix }}-{{ HomeRegion }}-ipam-workloads-test-pool/shareTargets/organizationalUnits
+    value: Workloads/Test/Healthcare
+  - op: appendUniqueScalar
+    file: network-config.yaml
+    path: /centralNetworkServices/ipams/@name={{ AcceleratorPrefix }}-{{ HomeRegion }}-ipam/pools/@name={{ AcceleratorPrefix }}-{{ HomeRegion }}-ipam-workloads-prod-pool/shareTargets/organizationalUnits
+    value: Workloads/Prod/Healthcare

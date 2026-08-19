@@ -1,0 +1,45 @@
+{
+  "tags": {
+    "Environment": {
+      "tag_key": {
+        "@@assign": "Environment"
+      },
+      "tag_value": {
+        "@@assign": [
+          "Dev",
+          "Test",
+          "Prod"
+        ]
+      }
+    },
+    "DataClassification": {
+      "tag_key": {
+        "@@assign": "DataClassification"
+      },
+      "tag_value": {
+        "@@assign": [
+          "Public",
+          "Internal",
+          "Confidential",
+          "Restricted",
+          "PHI"
+        ]
+      },
+      "enforced_for": {
+        "@@assign": [
+          "dms:*",
+          "dynamodb:table",
+          "ec2:instance",
+          "ecs:cluster",
+          "eks:cluster",
+          "elasticfilesystem:*",
+          "elasticmapreduce:cluster",
+          "fsx:*",
+          "rds:cluster-endpoint",
+          "redshift:*",
+          "s3:bucket"
+        ]
+      }
+    }
+  }
+}

@@ -8,6 +8,23 @@ We highly recommend that you keep your environments up to date by upgrading to t
 
 When applying updates, review the changes in this release alongside your current configuration to decide which features from this version to adopt.
 
+## [Unreleased]
+
+### New Features
+
+- Added a healthcare overlay for the hub-and-spoke network model, with the `Network` account retaining hub duties.
+- Added deterministic configuration composition, collision detection, content hashing, and offline semantic validation.
+- Added healthcare workload OUs, PHI-oriented tag governance, explicit ten-year log retention, and a staged/unattached HIPAA-eligible-services SCP.
+- Added GitHub Actions offline tests and generated-configuration validation without AWS credentials.
+
+### Documentation
+
+- Added healthcare overlay, CIS Level 1 targeting, permission-boundary decisions, control-porting decisions, and future live-validation guidance.
+
+### Bug Fixes
+
+- Removed the unsupported `type` property from the declarative policy configuration so it conforms to the pinned LZA v1.16.0 schema.
+
 ## [1.3.0] - 2026-07-31
 
 ### New Features

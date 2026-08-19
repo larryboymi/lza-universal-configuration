@@ -14,6 +14,12 @@ Review the guidance for your region or industry before deployment to understand 
 
 == Supported Regions and Industries
 
+=== Healthcare
+
+For organizations preparing regulated healthcare workloads. Provides a composable healthcare profile, PHI-oriented tagging, a staged HIPAA-eligible-services policy, CIS Level 1 targeting guidance, and a future live-validation sequence.
+
+link:healthcare/README.md[View Healthcare Guidance →]
+
 === US Federal
 
 For US government agencies, contractors, and organizations handling sensitive federal workloads. Covers AWS GovCloud (US) deployment, federal compliance frameworks, and enhanced security controls.

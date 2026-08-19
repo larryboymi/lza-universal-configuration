@@ -7,3 +7,6 @@ or in the "license" file accompanying this file. This file is distributed on an 
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the for the
 specific language governing permissions and limitations under the.
 
+The staged healthcare HIPAA-eligible-services policy is derived from
+aws-samples/landing-zone-accelerator-on-aws-for-healthcare, commit
+2916b696566c4116661475864dd4f087664aabed, licensed under MIT-0.

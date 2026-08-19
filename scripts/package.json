@@ -2,6 +2,12 @@
   "name": "lza-universal-configuration-scripts",
   "version": "0.0.0",
   "main": "index.js",
+  "scripts": {
+    "schemas:download": "node download-lza-schemas.js --output .cache/lza-schemas/1.16.0",
+    "test": "node --test test/*.test.js",
+    "test:healthcare": "node --test test/healthcare-overlay.test.js",
+    "validate:lza-schema": "node validate-lza-schema.js"
+  },
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
@@ -9,5 +15,8 @@
   },
   "dependencies": {
     "js-yaml": "^4.3.0"
+  },
+  "devDependencies": {
+    "ajv": "8.17.1"
   }
 }
